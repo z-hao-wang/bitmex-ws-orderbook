@@ -1,4 +1,17 @@
-# npm-package-boilerplate
-This will help you to get started to create typescript npm package
+# bitmex websocket orderbook keeper
+install
+```
+npm i bitmex-ws-orderbook
+```
+Code
+```
+import { BitmexOrderBookKeeper } from 'bitmex-ws-orderbook';
+const bitmexOb = new BitmexOrderBookKeeper({ testnet: true });
+bitmexOb.onSocketMessage(msg);
+const ob = await bitmexOb.getOrderBook('XBTUSD');
+```
 
-`npm build` to build the lib
+You must send websocket message from outside, this is to enable using single websocket connection for multiple purposes
+
+##sample 
+see src/sample/bitmexOrderBookSample.ts

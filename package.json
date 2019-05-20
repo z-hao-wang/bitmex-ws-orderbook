@@ -1,5 +1,5 @@
 {
-  "name": "samplename",
+  "name": "bitmex-ws-orderbook",
   "version": "1.0.1",
   "description": "",
   "main": "dist/index.js",
@@ -13,16 +13,26 @@
   },
   "author": "Hao Wang",
   "license": "MIT",
-  "keywords": ["nodejs", "typescript"],
+  "keywords": [
+    "nodejs",
+    "typescript",
+    "bitmex",
+    "websocket"
+  ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/z-hao-wang/npm-package-boilerplate.git"
+    "url": "https://github.com/z-hao-wang/bitmex-ws-orderbook.git"
   },
   "dependencies": {
-    "lodash": "^4.17.11"
+    "lodash": "^4.17.11",
+    "request": "^2.88.0"
   },
   "devDependencies": {
-    "@types/lodash": "^4.14.123",
-    "prettier": "^1.16.4"
+    "@types/lodash": "^4.14.129",
+    "@types/request": "^2.48.1",
+    "@types/ws": "^6.0.1",
+    "prettier": "^1.16.4",
+    "websocket-reconnect": "^1.0.2",
+    "ws": "^7.0.0"
   }
 }

@@ -1,7 +1,6 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const _ = require("lodash");
-function testFunc(input) {
-    return _.filter(input, i => i > 0);
+function __export(m) {
+    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 }
-exports.testFunc = testFunc;
+Object.defineProperty(exports, "__esModule", { value: true });
+__export(require("./bitmexOrderBookKeeper"));
