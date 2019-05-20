@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { bitmexRequest } from './utils/bitmexRequest';
+import { pollOrderBook } from './utils/bitmexRequest';
 import * as traderUtils from './utils/traderUtils';
 import { sortOrderBooks, verifyObPollVsObWs } from './utils/parsingUtils';
 import * as EventEmitter from 'events';
@@ -105,55 +105,17 @@ export class BitmexOrderBookKeeper extends EventEmitter {
     });
   }
 
-  protected async _getOrderBookHttp(pair: string): Promise<Bitmex.BitmexOrderBooks> {
-    const data = {
-      symbol: pair,
-      depth: 25,
-    };
-    const orderBooksRaw: Bitmex.BitmexOrderBooks = await bitmexRequest<Bitmex.BitmexOrderBooks>(
-      'GET',
-      '/orderBook/L2',
-      data,
-      3,
-      this.testnet,
-    );
-    return orderBooksRaw;
-  }
-
-  // bitmex order book amount is valued with USD amount, convert them to asset amount instead.
-  protected async _pollOrderBook(pair: string) {
-    const orderBooksRaw: Bitmex.BitmexOrderBooks = await this._getOrderBookHttp(pair);
-    const asks1: Bitmex.BitmexOrderBookItem[] = _.filter(
-      orderBooksRaw,
-      (ob: Bitmex.BitmexOrderBookItem) => ob.side === 'Sell',
-    );
-    const asks2: Bitmex.OrderBookItem[] = _.map(
-      asks1,
-      (ob: Bitmex.BitmexOrderBookItem) => ({ r: ob.price, a: ob.size } as Bitmex.OrderBookItem),
-    );
-
-    const bids1: Bitmex.BitmexOrderBookItem[] = _.filter(
-      orderBooksRaw,
-      (ob: Bitmex.BitmexOrderBookItem) => ob.side === 'Buy',
-    );
-    const bids2: Bitmex.OrderBookItem[] = _.map(
-      bids1,
-      (ob: Bitmex.BitmexOrderBookItem) => ({ r: ob.price, a: ob.size } as Bitmex.OrderBookItem),
-    );
-    return sortOrderBooks({ pair, ts: new Date(), bids: bids2, asks: asks2 });
-  }
-
   // Get WS ob, and fall back to poll. also verify ws ob with poll ob
   async getOrderBook(pair: string, forcePoll?: boolean): Promise<Bitmex.OrderBookSchema> {
     if (forcePoll || !traderUtils.isTimeWithinRange(this.lastObWsTime, this.VALID_OB_WS_GAP)) {
       if (!forcePoll) console.warn(`this.lastObWsTime=${this.lastObWsTime} is outdated, polling instead`);
-      return await this._pollOrderBook(pair);
+      return await pollOrderBook(pair, this.testnet);
     }
     let obPoll;
 
     const verifyWithPoll = Math.random() < this.VERIFY_OB_PERCENT;
     if (verifyWithPoll) {
-      obPoll = await this._pollOrderBook(pair);
+      obPoll = await pollOrderBook(pair, this.testnet);
     }
 
     const obFromRealtime = this._getCurrentRealTimeOB(pair);
@@ -166,6 +128,6 @@ export class BitmexOrderBookKeeper extends EventEmitter {
     }
 
     console.warn(`orderbookws not available, polling instead obWs=${obFromRealtime}`);
-    return await this._pollOrderBook(pair);
+    return await pollOrderBook(pair, this.testnet);
   }
 }
