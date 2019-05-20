@@ -98,7 +98,7 @@ export class BitmexOrderBookKeeper extends EventEmitter {
     const asksUnsorted: Bitmex.OrderBookItem[] = _.map(askUnsortedRaw, d => ({ r: d.price, a: d.size }));
 
     return sortOrderBooks({
-      pair: pair,
+      pair,
       ts: this.lastObWsTime!,
       bids: bidsUnsorted,
       asks: asksUnsorted,
@@ -121,8 +121,8 @@ export class BitmexOrderBookKeeper extends EventEmitter {
   }
 
   // bitmex order book amount is valued with USD amount, convert them to asset amount instead.
-  protected async _pollOrderBook(pairDb: string) {
-    const orderBooksRaw: Bitmex.BitmexOrderBooks = await this._getOrderBookHttp(pairDb);
+  protected async _pollOrderBook(pair: string) {
+    const orderBooksRaw: Bitmex.BitmexOrderBooks = await this._getOrderBookHttp(pair);
     const asks1: Bitmex.BitmexOrderBookItem[] = _.filter(
       orderBooksRaw,
       (ob: Bitmex.BitmexOrderBookItem) => ob.side === 'Sell',
@@ -140,23 +140,23 @@ export class BitmexOrderBookKeeper extends EventEmitter {
       bids1,
       (ob: Bitmex.BitmexOrderBookItem) => ({ r: ob.price, a: ob.size } as Bitmex.OrderBookItem),
     );
-    return sortOrderBooks({ pair: pairDb, ts: new Date(), bids: bids2, asks: asks2 });
+    return sortOrderBooks({ pair, ts: new Date(), bids: bids2, asks: asks2 });
   }
 
   // Get WS ob, and fall back to poll. also verify ws ob with poll ob
-  async getOrderBook(pairDb: string, forcePoll?: boolean): Promise<Bitmex.OrderBookSchema> {
+  async getOrderBook(pair: string, forcePoll?: boolean): Promise<Bitmex.OrderBookSchema> {
     if (forcePoll || !traderUtils.isTimeWithinRange(this.lastObWsTime, this.VALID_OB_WS_GAP)) {
       if (!forcePoll) console.warn(`this.lastObWsTime=${this.lastObWsTime} is outdated, polling instead`);
-      return await this._pollOrderBook(pairDb);
+      return await this._pollOrderBook(pair);
     }
     let obPoll;
 
     const verifyWithPoll = Math.random() < this.VERIFY_OB_PERCENT;
     if (verifyWithPoll) {
-      obPoll = await this._pollOrderBook(pairDb);
+      obPoll = await this._pollOrderBook(pair);
     }
 
-    const obFromRealtime = this._getCurrentRealTimeOB(pairDb);
+    const obFromRealtime = this._getCurrentRealTimeOB(pair);
 
     if (obFromRealtime && obFromRealtime.bids.length > 0 && obFromRealtime.asks.length > 0) {
       if (verifyWithPoll) {
@@ -166,6 +166,6 @@ export class BitmexOrderBookKeeper extends EventEmitter {
     }
 
     console.warn(`orderbookws not available, polling instead obWs=${obFromRealtime}`);
-    return await this._pollOrderBook(pairDb);
+    return await this._pollOrderBook(pair);
   }
 }
