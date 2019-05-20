@@ -20,7 +20,7 @@ export declare namespace BitmexOb {
     }
     interface OrderBookSchema {
         ts: Date;
-        pair?: string;
+        pair: string;
         bids: OrderBookItem[];
         asks: OrderBookItem[];
     }
