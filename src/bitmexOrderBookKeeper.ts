@@ -3,6 +3,7 @@ import { pollOrderBook } from './utils/bitmexRequest';
 import * as traderUtils from './utils/traderUtils';
 import { sortOrderBooks, verifyObPollVsObWs } from './utils/parsingUtils';
 import * as EventEmitter from 'events';
+import { BitmexOb } from './types/bitmex.type';
 
 export function sortByAsc(items: any[], key?: string) {
   if (key) {
@@ -27,7 +28,7 @@ export namespace BitmexOrderBookKeeper {
 
 export class BitmexOrderBookKeeper extends EventEmitter {
   protected lastObWsTime?: Date;
-  protected storedObs: Record<string, Record<string, Bitmex.OBRow>> = {};
+  protected storedObs: Record<string, Record<string, BitmexOb.OBRow>> = {};
   protected testnet: boolean;
   protected enableEvent: boolean;
 
@@ -54,7 +55,7 @@ export class BitmexOrderBookKeeper extends EventEmitter {
     }
   }
 
-  protected _saveWsObData(obRows: Bitmex.BitmexOrderBookItem[], action: string) {
+  protected _saveWsObData(obRows: BitmexOb.BitmexOrderBookItem[], action: string) {
     if (obRows.length === 0) {
       console.warn(`empty obRows`);
       return;
@@ -89,13 +90,17 @@ export class BitmexOrderBookKeeper extends EventEmitter {
     }
   }
 
-  protected _getCurrentRealTimeOB(pair: string): Bitmex.OrderBookSchema | null {
+  onOrderBookUpdated(callback: (ob: BitmexOb.OrderBookSchema) => any) {
+    this.on('orderbook', callback);
+  }
+
+  protected _getCurrentRealTimeOB(pair: string): BitmexOb.OrderBookSchema | null {
     const dataRaw = this.storedObs[pair];
     if (!dataRaw) return null;
     const bidsUnsortedRaw = _.filter(dataRaw, o => o.side === 'Buy' && o.size > 0);
     const askUnsortedRaw = _.filter(dataRaw, o => o.side === 'Sell' && o.size > 0);
-    const bidsUnsorted: Bitmex.OrderBookItem[] = _.map(bidsUnsortedRaw, d => ({ r: d.price, a: d.size }));
-    const asksUnsorted: Bitmex.OrderBookItem[] = _.map(askUnsortedRaw, d => ({ r: d.price, a: d.size }));
+    const bidsUnsorted: BitmexOb.OrderBookItem[] = _.map(bidsUnsortedRaw, d => ({ r: d.price, a: d.size }));
+    const asksUnsorted: BitmexOb.OrderBookItem[] = _.map(askUnsortedRaw, d => ({ r: d.price, a: d.size }));
 
     return sortOrderBooks({
       pair,
@@ -106,7 +111,7 @@ export class BitmexOrderBookKeeper extends EventEmitter {
   }
 
   // Get WS ob, and fall back to poll. also verify ws ob with poll ob
-  async getOrderBook(pair: string, forcePoll?: boolean): Promise<Bitmex.OrderBookSchema> {
+  async getOrderBook(pair: string, forcePoll?: boolean): Promise<BitmexOb.OrderBookSchema> {
     if (forcePoll || !traderUtils.isTimeWithinRange(this.lastObWsTime, this.VALID_OB_WS_GAP)) {
       if (!forcePoll) console.warn(`this.lastObWsTime=${this.lastObWsTime} is outdated, polling instead`);
       return await pollOrderBook(pair, this.testnet);

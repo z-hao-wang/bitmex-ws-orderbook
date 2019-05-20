@@ -1,21 +1,22 @@
 import { sortByAsc, sortByDesc } from '../bitmexOrderBookKeeper';
+import { BitmexOb } from '../types/bitmex.type';
 
-export function isObPriceEqual(ob1: Bitmex.OrderBookItem, ob2: Bitmex.OrderBookItem) {
+export function isObPriceEqual(ob1: BitmexOb.OrderBookItem, ob2: BitmexOb.OrderBookItem) {
   if (ob1.r !== ob2.r) return false;
   return true;
 }
 
-export function isObAmountEqual(ob1: Bitmex.OrderBookItem, ob2: Bitmex.OrderBookItem) {
+export function isObAmountEqual(ob1: BitmexOb.OrderBookItem, ob2: BitmexOb.OrderBookItem) {
   return Math.abs(ob1.a - ob2.a) <= 0.0001;
 }
 
-export function isObItemEqual(ob1: Bitmex.OrderBookItem, ob2: Bitmex.OrderBookItem) {
+export function isObItemEqual(ob1: BitmexOb.OrderBookItem, ob2: BitmexOb.OrderBookItem) {
   return isObPriceEqual(ob1, ob2) && isObAmountEqual;
 }
 
 export function verifyObPollVsObWs(
-  obPoll: Bitmex.OrderBookSchema | undefined | null,
-  obWs: Bitmex.OrderBookSchema | null,
+  obPoll: BitmexOb.OrderBookSchema | undefined | null,
+  obWs: BitmexOb.OrderBookSchema | null,
 ): number {
   if (!obPoll) {
     console.error(`obPoll is null`);
@@ -45,7 +46,7 @@ export function verifyObPollVsObWs(
   return Math.max(bidPriceDiffPercent, askPriceDiffPercent);
 }
 
-export function sortOrderBooks(orderBooks: Bitmex.OrderBookSchema): Bitmex.OrderBookSchema {
+export function sortOrderBooks(orderBooks: BitmexOb.OrderBookSchema): BitmexOb.OrderBookSchema {
   return {
     ...orderBooks,
     bids: sortByDesc(orderBooks.bids, 'r'),

@@ -1,4 +1,4 @@
-import { BitmexOrderBookKeeper } from '../index';
+import { BitmexOb, BitmexOrderBookKeeper } from '../index';
 import { WsReconnect } from 'websocket-reconnect';
 
 (() => {
@@ -12,7 +12,7 @@ import { WsReconnect } from 'websocket-reconnect';
     ws.send(JSON.stringify({ op: 'subscribe', args: [`orderBookL2_25:XBTUSD`] }));
   });
   ws.on('message', (msg: any) => bitmexOb.onSocketMessage(msg));
-  bitmexOb.on(`orderbook`, ob => {
+  bitmexOb.onOrderBookUpdated((ob: BitmexOb.OrderBookSchema) => {
     console.log(`orderbook from event`, ob);
   });
 
