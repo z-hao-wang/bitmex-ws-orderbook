@@ -20,7 +20,7 @@ const websocket_reconnect_1 = require("websocket-reconnect");
         ws.send(JSON.stringify({ op: 'subscribe', args: [`orderBookL2_25:XBTUSD`] }));
     });
     ws.on('message', (msg) => bitmexOb.onSocketMessage(msg));
-    bitmexOb.on(`orderbook`, ob => {
+    bitmexOb.onOrderBookUpdated((ob) => {
         console.log(`orderbook from event`, ob);
     });
     setInterval(() => __awaiter(this, void 0, void 0, function* () {

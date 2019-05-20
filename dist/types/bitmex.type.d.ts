@@ -1,4 +1,4 @@
-declare namespace Bitmex {
+export declare namespace BitmexOb {
     type BitmexSide = 'Sell' | 'Buy';
     interface OBRow {
         symbol: string;

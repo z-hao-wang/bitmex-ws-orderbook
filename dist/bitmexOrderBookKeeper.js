@@ -86,6 +86,9 @@ class BitmexOrderBookKeeper extends EventEmitter {
             this.emit(`orderbook`, this._getCurrentRealTimeOB(pair));
         }
     }
+    onOrderBookUpdated(callback) {
+        this.on('orderbook', callback);
+    }
     _getCurrentRealTimeOB(pair) {
         const dataRaw = this.storedObs[pair];
         if (!dataRaw)

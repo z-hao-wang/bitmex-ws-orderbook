@@ -8,59 +8,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const request = require("request");
-const retry_1 = require("./retry");
 const _ = require("lodash");
 const parsingUtils_1 = require("./parsingUtils");
-const API_VERSION = '/api/v1';
-const URL_TESTNET = 'https://testnet.bitmex.com' + API_VERSION;
-const URL_PROD = 'https://www.bitmex.com' + API_VERSION;
-function getUrl(testnet) {
-    return testnet ? URL_TESTNET : URL_PROD;
-}
-exports.getUrl = getUrl;
+const bitmex_request_1 = require("bitmex-request");
 function bitmexRequest(method, path, data, retryTimes, testnet) {
     return __awaiter(this, void 0, void 0, function* () {
-        const postBody = JSON.stringify(data);
-        let headers = {
-            'content-type': 'application/json',
-            Accept: 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-        };
-        const fullUrl = getUrl(testnet) + path;
-        const requestOptions = {
-            headers: headers,
-            url: fullUrl,
-            method,
-            body: postBody,
-        };
-        const requestFunc = () => __awaiter(this, void 0, void 0, function* () {
-            return new Promise((resolve, reject) => {
-                request(requestOptions, (error, response, body) => {
-                    if (error) {
-                        return reject(error);
-                    }
-                    if (!body) {
-                        const errMsg = `empty result, ${method} ${path} ${data}`;
-                        return reject(errMsg);
-                    }
-                    try {
-                        const parsedBody = JSON.parse(body);
-                        resolve(parsedBody);
-                    }
-                    catch (e) {
-                        const errMsg = `parse body json failed, ${method} ${path} ${body}`;
-                        reject(errMsg);
-                    }
-                });
-            });
+        const bitmexRequest = new bitmex_request_1.BitmexRequest({
+            testnet,
         });
-        return retry_1.requestRetry(requestFunc, {
-            maxRetryTimes: retryTimes,
-            successCondition: (res) => {
-                return res && !res.error;
-            },
-        });
+        return bitmexRequest.request(method, path, data, false, retryTimes);
     });
 }
 exports.bitmexRequest = bitmexRequest;
