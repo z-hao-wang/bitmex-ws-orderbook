@@ -75,7 +75,9 @@ export class BitmexOrderBookKeeper extends EventEmitter {
           this.storedObs[pair][String(row.id)].size = row.size;
           this.storedObs[pair][String(row.id)].side = row.side;
         } else {
-          console.error(`update ${row.id} does not exist in currentObMap`);
+          const errMsg = `update ${row.id} does not exist in currentObMap`;
+          console.error(errMsg);
+          this.emit(`error`, errMsg);
         }
       });
     } else if (action === 'delete') {
