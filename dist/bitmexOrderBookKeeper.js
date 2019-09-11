@@ -112,7 +112,8 @@ class BitmexOrderBookKeeper extends EventEmitter {
         return __awaiter(this, void 0, void 0, function* () {
             if (forcePoll || !traderUtils.isTimeWithinRange(this.lastObWsTime, this.VALID_OB_WS_GAP)) {
                 if (!forcePoll)
-                    console.warn(moment().format('YYYY-MM-DD HH:mm:ss') + ` this.lastObWsTime=${this.lastObWsTime} is outdated, polling instead`);
+                    console.warn(moment().format('YYYY-MM-DD HH:mm:ss') +
+                        ` this.lastObWsTime=${this.lastObWsTime} is outdated, polling instead`);
                 return yield bitmexRequest_1.pollOrderBook(pair, this.testnet);
             }
             let obPoll;
@@ -128,6 +129,9 @@ class BitmexOrderBookKeeper extends EventEmitter {
                 return obFromRealtime;
             }
             console.warn(moment().format('YYYY-MM-DD HH:mm:ss') + ` orderbookws not available, polling instead obWs=${obFromRealtime}`);
+            if (obPoll) {
+                return obPoll;
+            }
             return yield bitmexRequest_1.pollOrderBook(pair, this.testnet);
         });
     }
