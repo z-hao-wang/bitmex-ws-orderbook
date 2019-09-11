@@ -142,6 +142,9 @@ export class BitmexOrderBookKeeper extends EventEmitter {
     console.warn(
       moment().format('YYYY-MM-DD HH:mm:ss') + ` orderbookws not available, polling instead obWs=${obFromRealtime}`,
     );
+    if (obPoll) {
+      return obPoll;
+    }
     return await pollOrderBook(pair, this.testnet);
   }
 }
