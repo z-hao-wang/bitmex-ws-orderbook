@@ -5,6 +5,7 @@ import { sortOrderBooks, verifyObPollVsObWs } from './utils/parsingUtils';
 import * as EventEmitter from 'events';
 import * as moment from 'moment';
 import { BitmexOb } from './types/bitmex.type';
+import { OrderBookItem, OrderBookSchema } from 'bitmex-request';
 
 export function sortByAsc(items: any[], key?: string) {
   if (key) {
@@ -95,17 +96,17 @@ export class BitmexOrderBookKeeper extends EventEmitter {
     }
   }
 
-  onOrderBookUpdated(callback: (ob: BitmexOb.OrderBookSchema) => any) {
+  onOrderBookUpdated(callback: (ob: OrderBookSchema) => any) {
     this.on('orderbook', callback);
   }
 
-  protected _getCurrentRealTimeOB(pair: string): BitmexOb.OrderBookSchema | null {
+  protected _getCurrentRealTimeOB(pair: string): OrderBookSchema | null {
     const dataRaw = this.storedObs[pair];
     if (!dataRaw) return null;
     const bidsUnsortedRaw = _.filter(dataRaw, o => o.side === 'Buy' && o.size > 0);
     const askUnsortedRaw = _.filter(dataRaw, o => o.side === 'Sell' && o.size > 0);
-    const bidsUnsorted: BitmexOb.OrderBookItem[] = _.map(bidsUnsortedRaw, d => ({ r: d.price, a: d.size }));
-    const asksUnsorted: BitmexOb.OrderBookItem[] = _.map(askUnsortedRaw, d => ({ r: d.price, a: d.size }));
+    const bidsUnsorted: OrderBookItem[] = _.map(bidsUnsortedRaw, d => ({ r: d.price, a: d.size }));
+    const asksUnsorted: OrderBookItem[] = _.map(askUnsortedRaw, d => ({ r: d.price, a: d.size }));
 
     return sortOrderBooks({
       pair,
@@ -116,7 +117,7 @@ export class BitmexOrderBookKeeper extends EventEmitter {
   }
 
   // Get WS ob, and fall back to poll. also verify ws ob with poll ob
-  async getOrderBook(pairEx: string, forcePoll?: boolean): Promise<BitmexOb.OrderBookSchema> {
+  async getOrderBook(pairEx: string, forcePoll?: boolean): Promise<OrderBookSchema> {
     if (forcePoll || !traderUtils.isTimeWithinRange(this.lastObWsTime, this.VALID_OB_WS_GAP)) {
       if (!forcePoll)
         console.warn(

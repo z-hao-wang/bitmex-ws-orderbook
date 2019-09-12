@@ -24,7 +24,7 @@
     "url": "https://github.com/z-hao-wang/bitmex-ws-orderbook.git"
   },
   "dependencies": {
-    "bitmex-request": "0.0.9",
+    "bitmex-request": "0.0.10",
     "lodash": "^4.17.11",
     "moment": "^2.24.0",
     "request": "^2.88.0"

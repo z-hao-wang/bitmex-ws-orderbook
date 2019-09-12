@@ -1,6 +1,7 @@
 import { BitmexRequest } from 'bitmex-request';
 import * as EventEmitter from 'events';
 import { BitmexOb } from './types/bitmex.type';
+import { OrderBookSchema } from 'bitmex-request';
 export declare function sortByAsc(items: any[], key?: string): any[];
 export declare function sortByDesc(items: any[], key?: string): any[];
 export declare namespace BitmexOrderBookKeeper {
@@ -20,7 +21,7 @@ export declare class BitmexOrderBookKeeper extends EventEmitter {
     constructor(options: BitmexOrderBookKeeper.Options);
     onSocketMessage(msg: any): void;
     protected _saveWsObData(obRows: BitmexOb.BitmexOrderBookItem[], action: string): void;
-    onOrderBookUpdated(callback: (ob: BitmexOb.OrderBookSchema) => any): void;
-    protected _getCurrentRealTimeOB(pair: string): BitmexOb.OrderBookSchema | null;
-    getOrderBook(pairEx: string, forcePoll?: boolean): Promise<BitmexOb.OrderBookSchema>;
+    onOrderBookUpdated(callback: (ob: OrderBookSchema) => any): void;
+    protected _getCurrentRealTimeOB(pair: string): OrderBookSchema | null;
+    getOrderBook(pairEx: string, forcePoll?: boolean): Promise<OrderBookSchema>;
 }

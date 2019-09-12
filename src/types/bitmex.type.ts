@@ -17,17 +17,5 @@ export declare namespace BitmexOb {
     price: number;
   }
 
-  interface OrderBookItem {
-    a: number;
-    r: number;
-  }
-
-  interface OrderBookSchema {
-    ts: Date;
-    pair: string;
-    bids: OrderBookItem[];
-    asks: OrderBookItem[];
-  }
-
   type BitmexOrderBooks = BitmexOrderBookItem[];
 }
