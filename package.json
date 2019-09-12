@@ -1,11 +1,11 @@
 {
   "name": "bitmex-ws-orderbook",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "rimraf dist && tsc",
     "tsc": "tsc",
     "tsc:watch": "tsc -w",
     "prettier": "node ./node_modules/prettier/bin-prettier.js --parser=typescript --single-quote --trailing-comma=all --write --print-width=120 'src/**/*.ts'",
@@ -24,7 +24,7 @@
     "url": "https://github.com/z-hao-wang/bitmex-ws-orderbook.git"
   },
   "dependencies": {
-    "bitmex-request": "0.0.2",
+    "bitmex-request": "0.0.9",
     "lodash": "^4.17.11",
     "moment": "^2.24.0",
     "request": "^2.88.0"
@@ -34,6 +34,7 @@
     "@types/request": "^2.48.1",
     "@types/ws": "^6.0.1",
     "prettier": "^1.16.4",
+    "rimraf": "^3.0.0",
     "websocket-reconnect": "^1.0.2",
     "ws": "^7.0.0"
   }

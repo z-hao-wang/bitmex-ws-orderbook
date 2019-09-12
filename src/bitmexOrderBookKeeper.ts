@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { pollOrderBook } from './utils/bitmexRequest';
+import { BitmexRequest } from 'bitmex-request';
 import * as traderUtils from './utils/traderUtils';
 import { sortOrderBooks, verifyObPollVsObWs } from './utils/parsingUtils';
 import * as EventEmitter from 'events';
@@ -32,6 +32,7 @@ export class BitmexOrderBookKeeper extends EventEmitter {
   protected storedObs: Record<string, Record<string, BitmexOb.OBRow>> = {};
   protected testnet: boolean;
   protected enableEvent: boolean;
+  protected bitmexRequest: BitmexRequest;
 
   VERIFY_OB_PERCENT = 0;
   VALID_OB_WS_GAP = 20 * 1000;
@@ -40,6 +41,7 @@ export class BitmexOrderBookKeeper extends EventEmitter {
     super();
     this.testnet = options.testnet || false;
     this.enableEvent = options.enableEvent || false;
+    this.bitmexRequest = new BitmexRequest({ testnet: this.testnet });
   }
 
   // either parsed object or raw text
@@ -114,23 +116,23 @@ export class BitmexOrderBookKeeper extends EventEmitter {
   }
 
   // Get WS ob, and fall back to poll. also verify ws ob with poll ob
-  async getOrderBook(pair: string, forcePoll?: boolean): Promise<BitmexOb.OrderBookSchema> {
+  async getOrderBook(pairEx: string, forcePoll?: boolean): Promise<BitmexOb.OrderBookSchema> {
     if (forcePoll || !traderUtils.isTimeWithinRange(this.lastObWsTime, this.VALID_OB_WS_GAP)) {
       if (!forcePoll)
         console.warn(
           moment().format('YYYY-MM-DD HH:mm:ss') +
             ` this.lastObWsTime=${this.lastObWsTime} is outdated, polling instead`,
         );
-      return await pollOrderBook(pair, this.testnet);
+      return await this.bitmexRequest.pollOrderBook(pairEx);
     }
     let obPoll;
 
     const verifyWithPoll = Math.random() < this.VERIFY_OB_PERCENT;
     if (verifyWithPoll) {
-      obPoll = await pollOrderBook(pair, this.testnet);
+      obPoll = await this.bitmexRequest.pollOrderBook(pairEx);
     }
 
-    const obFromRealtime = this._getCurrentRealTimeOB(pair);
+    const obFromRealtime = this._getCurrentRealTimeOB(pairEx);
 
     if (obFromRealtime && obFromRealtime.bids.length > 0 && obFromRealtime.asks.length > 0) {
       if (verifyWithPoll) {
@@ -145,6 +147,6 @@ export class BitmexOrderBookKeeper extends EventEmitter {
     if (obPoll) {
       return obPoll;
     }
-    return await pollOrderBook(pair, this.testnet);
+    return await this.bitmexRequest.pollOrderBook(pairEx);
   }
 }
