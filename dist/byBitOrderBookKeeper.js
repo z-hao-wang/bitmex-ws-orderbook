@@ -14,8 +14,6 @@ const traderUtils = require("./utils/traderUtils");
 const parsingUtils_1 = require("./utils/parsingUtils");
 const EventEmitter = require("events");
 const moment = require("moment");
-// TODO: replace to real BybitRequest;
-const BybitRequest = bitmex_request_1.BitmexRequest;
 class BybitOrderBookKeeper extends EventEmitter {
     constructor(options) {
         super();
@@ -24,7 +22,7 @@ class BybitOrderBookKeeper extends EventEmitter {
         this.VALID_OB_WS_GAP = 20 * 1000;
         this.testnet = options.testnet || false;
         this.enableEvent = options.enableEvent || false;
-        this.bybitRequest = new BybitRequest({ testnet: this.testnet });
+        this.bybitRequest = new bitmex_request_1.BybitRequest({ testnet: this.testnet });
     }
     // either parsed object or raw text
     onSocketMessage(msg) {

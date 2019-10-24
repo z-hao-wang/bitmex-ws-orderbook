@@ -1,5 +1,5 @@
 import * as EventEmitter from 'events';
-import { BybitOb } from "./types/bybit.type";
+import { BybitOb } from './types/bybit.type';
 import { OrderBookSchema } from 'bitmex-request';
 export declare namespace BybitOrderBookKeeper {
     interface Options {

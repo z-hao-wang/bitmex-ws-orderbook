@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { BitmexRequest } from 'bitmex-request';
+import { BybitRequest } from 'bitmex-request';
 import * as traderUtils from './utils/traderUtils';
 import { sortOrderBooks, verifyObPollVsObWs } from './utils/parsingUtils';
 import * as EventEmitter from 'events';
@@ -13,8 +13,7 @@ export namespace BybitOrderBookKeeper {
     enableEvent?: boolean;
   }
 }
-// TODO: replace to real BybitRequest;
-const BybitRequest = BitmexRequest;
+
 export class BybitOrderBookKeeper extends EventEmitter {
   protected lastObWsTime?: Date;
   protected storedObs: Record<string, Record<string, BybitOb.OBRow>> = {};

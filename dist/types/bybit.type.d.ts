@@ -1,17 +1,10 @@
 export declare namespace BybitOb {
     type Side = 'Sell' | 'Buy';
-    interface OrderBookItem {
-        symbol: string;
-        id: number;
-        side: Side;
-        size: number;
-        price: number;
-    }
     interface OBRow {
         price: string;
         symbol: string;
         id: number;
-        side: string;
+        side: Side;
         size: number;
     }
     interface OrderBooksNew {
