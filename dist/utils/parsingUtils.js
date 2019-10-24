@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const bitmexOrderBookKeeper_1 = require("../bitmexOrderBookKeeper");
 function isObPriceEqual(ob1, ob2) {
     if (ob1.r !== ob2.r)
         return false;
@@ -44,6 +43,20 @@ function verifyObPollVsObWs(obPoll, obWs) {
 }
 exports.verifyObPollVsObWs = verifyObPollVsObWs;
 function sortOrderBooks(orderBooks) {
-    return Object.assign({}, orderBooks, { bids: bitmexOrderBookKeeper_1.sortByDesc(orderBooks.bids, 'r'), asks: bitmexOrderBookKeeper_1.sortByAsc(orderBooks.asks, 'r') });
+    return Object.assign({}, orderBooks, { bids: sortByDesc(orderBooks.bids, 'r'), asks: sortByAsc(orderBooks.asks, 'r') });
 }
 exports.sortOrderBooks = sortOrderBooks;
+function sortByAsc(items, key) {
+    if (key) {
+        return items.sort((a, b) => a[key] - b[key]);
+    }
+    return items.sort((a, b) => a - b);
+}
+exports.sortByAsc = sortByAsc;
+function sortByDesc(items, key) {
+    if (key) {
+        return items.sort((a, b) => b[key] - a[key]);
+    }
+    return items.sort((a, b) => b - a);
+}
+exports.sortByDesc = sortByDesc;

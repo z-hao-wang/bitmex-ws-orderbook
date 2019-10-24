@@ -1,5 +1,3 @@
-import { sortByAsc, sortByDesc } from '../bitmexOrderBookKeeper';
-import { BitmexOb } from '../types/bitmex.type';
 import { OrderBookItem, OrderBookSchema } from 'bitmex-request';
 
 export function isObPriceEqual(ob1: OrderBookItem, ob2: OrderBookItem) {
@@ -50,4 +48,18 @@ export function sortOrderBooks(orderBooks: OrderBookSchema): OrderBookSchema {
     bids: sortByDesc(orderBooks.bids, 'r'),
     asks: sortByAsc(orderBooks.asks, 'r'),
   };
+}
+
+export function sortByAsc(items: any[], key?: string) {
+  if (key) {
+    return items.sort((a, b) => a[key] - b[key]);
+  }
+  return items.sort((a, b) => a - b);
+}
+
+export function sortByDesc(items: any[], key?: string) {
+  if (key) {
+    return items.sort((a, b) => b[key] - a[key]);
+  }
+  return items.sort((a, b) => b - a);
 }

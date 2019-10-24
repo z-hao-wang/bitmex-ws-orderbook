@@ -14,7 +14,9 @@ const traderUtils = require("./utils/traderUtils");
 const parsingUtils_1 = require("./utils/parsingUtils");
 const EventEmitter = require("events");
 const moment = require("moment");
-class BitmexOrderBookKeeper extends EventEmitter {
+// TODO: replace to real BybitRequest;
+const BybitRequest = bitmex_request_1.BitmexRequest;
+class BybitOrderBookKeeper extends EventEmitter {
     constructor(options) {
         super();
         this.storedObs = {};
@@ -22,58 +24,50 @@ class BitmexOrderBookKeeper extends EventEmitter {
         this.VALID_OB_WS_GAP = 20 * 1000;
         this.testnet = options.testnet || false;
         this.enableEvent = options.enableEvent || false;
-        this.bitmexRequest = new bitmex_request_1.BitmexRequest({ testnet: this.testnet });
+        this.bybitRequest = new BybitRequest({ testnet: this.testnet });
     }
     // either parsed object or raw text
     onSocketMessage(msg) {
         try {
             const res = _.isString(msg) ? JSON.parse(msg) : msg;
-            const { table, action, data } = res;
-            // this logic is similar with transaction_flow/ob_bitmex_fx.ts
-            if (table === 'orderBookL2_25') {
-                this._saveWsObData(data, action);
+            const pairMatch = res.topic.match(/^orderBookL2_25\.(.*)/);
+            const pair = pairMatch && pairMatch[1];
+            if (pair) {
+                this.storedObs[pair] = this.storedObs[pair] || {};
+                this._saveWsObData(res);
             }
         }
         catch (e) {
             console.error(moment().format('YYYY-MM-DD HH:mm:ss'), e);
         }
     }
-    _saveWsObData(obRows, action) {
-        if (obRows.length === 0) {
-            console.warn(moment().format('YYYY-MM-DD HH:mm:ss') + ` empty obRows`);
-            return;
-        }
-        const pair = obRows[0].symbol;
-        this.storedObs[pair] = this.storedObs[pair] || {};
-        if (_.includes(['partial', 'insert'], action)) {
+    _saveWsObData(obs) {
+        if (_.includes(['snapshot'], obs.type)) {
             // first init, refresh ob data.
+            const obRows = obs.data;
             _.each(obRows, row => {
-                this.storedObs[pair][String(row.id)] = row;
+                this.storedObs[row.symbol][String(row.id)] = row;
             });
         }
-        else if (action === 'update') {
+        else if (obs.type === 'delta') {
             // if this order exists, we update it, otherwise don't worry
-            _.each(obRows, row => {
-                if (this.storedObs[pair][String(row.id)]) {
+            _.each(obs.data.update, row => {
+                if (this.storedObs[row.symbol][String(row.id)]) {
                     // must update one by one because update doesn't contain price
-                    this.storedObs[pair][String(row.id)].size = row.size;
-                    this.storedObs[pair][String(row.id)].side = row.side;
-                }
-                else {
-                    const errMsg = moment().format('YYYY-MM-DD HH:mm:ss') + ` update ${row.id} does not exist in currentObMap`;
-                    console.error(errMsg);
-                    this.emit(`error`, errMsg);
+                    this.storedObs[row.symbol][String(row.id)].size = row.size;
+                    this.storedObs[row.symbol][String(row.id)].side = row.side;
                 }
             });
-        }
-        else if (action === 'delete') {
-            _.each(obRows, row => {
-                delete this.storedObs[pair][String(row.id)];
+            _.each(obs.data.insert, row => {
+                this.storedObs[row.symbol][String(row.id)] = row;
+            });
+            _.each(obs.data.delete, row => {
+                delete this.storedObs[row.symbol][String(row.id)];
             });
         }
         this.lastObWsTime = new Date();
         if (this.enableEvent) {
-            this.emit(`orderbook`, this._getCurrentRealTimeOB(pair));
+            this.emit(`orderbook`, this._getCurrentRealTimeOB(obs.topic.match(/orderBookL2_25\.(.*)/)[1]));
         }
     }
     onOrderBookUpdated(callback) {
@@ -85,8 +79,8 @@ class BitmexOrderBookKeeper extends EventEmitter {
             return null;
         const bidsUnsortedRaw = _.filter(dataRaw, o => o.side === 'Buy' && o.size > 0);
         const askUnsortedRaw = _.filter(dataRaw, o => o.side === 'Sell' && o.size > 0);
-        const bidsUnsorted = _.map(bidsUnsortedRaw, d => ({ r: d.price, a: d.size }));
-        const asksUnsorted = _.map(askUnsortedRaw, d => ({ r: d.price, a: d.size }));
+        const bidsUnsorted = _.map(bidsUnsortedRaw, d => ({ r: +d.price, a: d.size }));
+        const asksUnsorted = _.map(askUnsortedRaw, d => ({ r: +d.price, a: d.size }));
         return parsingUtils_1.sortOrderBooks({
             pair,
             ts: this.lastObWsTime,
@@ -101,12 +95,12 @@ class BitmexOrderBookKeeper extends EventEmitter {
                 if (!forcePoll)
                     console.warn(moment().format('YYYY-MM-DD HH:mm:ss') +
                         ` this.lastObWsTime=${this.lastObWsTime} is outdated, polling instead`);
-                return yield this.bitmexRequest.pollOrderBook(pairEx);
+                return yield this.bybitRequest.pollOrderBook(pairEx);
             }
             let obPoll;
             const verifyWithPoll = Math.random() < this.VERIFY_OB_PERCENT;
             if (verifyWithPoll) {
-                obPoll = yield this.bitmexRequest.pollOrderBook(pairEx);
+                obPoll = yield this.bybitRequest.pollOrderBook(pairEx);
             }
             const obFromRealtime = this._getCurrentRealTimeOB(pairEx);
             if (obFromRealtime && obFromRealtime.bids.length > 0 && obFromRealtime.asks.length > 0) {
@@ -119,8 +113,8 @@ class BitmexOrderBookKeeper extends EventEmitter {
             if (obPoll) {
                 return obPoll;
             }
-            return yield this.bitmexRequest.pollOrderBook(pairEx);
+            return yield this.bybitRequest.pollOrderBook(pairEx);
         });
     }
 }
-exports.BitmexOrderBookKeeper = BitmexOrderBookKeeper;
+exports.BybitOrderBookKeeper = BybitOrderBookKeeper;

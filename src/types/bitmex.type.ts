@@ -1,21 +1,21 @@
 export declare namespace BitmexOb {
-  type BitmexSide = 'Sell' | 'Buy';
+  type Side = 'Sell' | 'Buy';
 
   interface OBRow {
     symbol: string;
     id: number;
-    side: BitmexSide;
+    side: Side;
     price: number;
     size: number;
   }
 
-  interface BitmexOrderBookItem {
+  interface OrderBookItem {
     symbol: string;
     id: number;
-    side: BitmexSide;
+    side: Side;
     size: number; // Size is in USD
     price: number;
   }
 
-  type BitmexOrderBooks = BitmexOrderBookItem[];
+  type OrderBooks = OrderBookItem[];
 }
