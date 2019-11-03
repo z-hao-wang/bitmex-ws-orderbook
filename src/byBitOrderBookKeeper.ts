@@ -102,7 +102,8 @@ export class BybitOrderBookKeeper extends EventEmitter {
       if (!forcePoll)
         console.warn(
           moment().format('YYYY-MM-DD HH:mm:ss') +
-            ` this.lastObWsTime=${this.lastObWsTime} is outdated, polling instead`,
+            ` this.lastObWsTime=${this.lastObWsTime && this.lastObWsTime.toISOString()} is outdated diff=(${Date.now() -
+              (this.lastObWsTime ? this.lastObWsTime.getTime() : 0)}), polling instead`,
         );
       return await this.bybitRequest.pollOrderBook(pairEx);
     }
