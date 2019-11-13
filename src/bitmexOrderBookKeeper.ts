@@ -2,8 +2,6 @@ import * as _ from 'lodash';
 import { BitmexRequest } from 'bitmex-request';
 import * as traderUtils from './utils/traderUtils';
 import { sortOrderBooks, verifyObPollVsObWs } from './utils/parsingUtils';
-import * as EventEmitter from 'events';
-import * as moment from 'moment';
 import { BitmexOb } from './types/bitmex.type';
 import { OrderBookItem, OrderBookSchema } from 'bitmex-request';
 import { BaseKeeper } from './baseKeeper';

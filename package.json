@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "rimraf dist && tsc",
+    "build": "rimraf dist && tsc && rimraf dist/sample",
     "tsc": "tsc",
     "tsc:watch": "tsc -w",
     "prettier": "node ./node_modules/prettier/bin-prettier.js --parser=typescript --single-quote --trailing-comma=all --write --print-width=120 'src/**/*.ts'",
@@ -25,10 +25,8 @@
   },
   "dependencies": {
     "bitmex-request": "0.0.32",
-    "el-logger": "^1.0.3",
-    "lodash": "4.17.15",
-    "moment": "^2.24.0",
-    "request": "^2.88.0"
+    "el-logger": "1.0.3",
+    "lodash": "4.17.15"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.129",
