@@ -6,6 +6,7 @@ export declare class BaseKeeper extends EventEmitter {
     name: string;
     cachedPollOrderBook: Record<string, OrderBookSchema>;
     constructor();
+    initLogger(): void;
     pollingRateLimiter: RateLimit;
     pollOrderBook(pairEx: string): Promise<OrderBookSchema>;
     pollOrderBookWithRateLimit(pairEx: string): Promise<OrderBookSchema>;

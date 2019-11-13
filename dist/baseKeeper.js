@@ -19,6 +19,9 @@ class BaseKeeper extends EventEmitter {
         this.pollingRateLimiter = new el_logger_1.RateLimit(1, 2);
         this.logger = new el_logger_1.Logger({ name: this.name });
     }
+    initLogger() {
+        this.logger = new el_logger_1.Logger({ name: this.name });
+    }
     pollOrderBook(pairEx) {
         return __awaiter(this, void 0, void 0, function* () {
             throw new Error(`must override pollOrderBook`);

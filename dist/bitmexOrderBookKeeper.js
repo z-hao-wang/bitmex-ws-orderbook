@@ -17,12 +17,13 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
     constructor(options) {
         super();
         this.storedObs = {};
+        this.name = 'bitmexObKeeper';
         this.VERIFY_OB_PERCENT = 0;
         this.VALID_OB_WS_GAP = 20 * 1000;
         this.testnet = options.testnet || false;
         this.enableEvent = options.enableEvent || false;
         this.bitmexRequest = new bitmex_request_1.BitmexRequest({ testnet: this.testnet });
-        this.name = 'bybitObKeeper';
+        this.initLogger();
     }
     // either parsed object or raw text
     onSocketMessage(msg) {
