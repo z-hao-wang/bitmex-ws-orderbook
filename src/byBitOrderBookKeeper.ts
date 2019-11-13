@@ -37,7 +37,7 @@ export class BybitOrderBookKeeper extends BaseKeeper {
   onSocketMessage(msg: any) {
     try {
       const res = _.isString(msg) ? JSON.parse(msg) : msg;
-      const pairMatch = res.topic.match(/^orderBookL2_25\.(.*)/);
+      const pairMatch = res && res.topic.match(/^orderBookL2_25\.(.*)/);
       const pair = pairMatch && pairMatch[1];
       if (pair) {
         this.storedObs[pair] = this.storedObs[pair] || {};
