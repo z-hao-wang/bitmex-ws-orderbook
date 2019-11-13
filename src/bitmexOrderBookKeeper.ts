@@ -19,7 +19,6 @@ export class BitmexOrderBookKeeper extends BaseKeeper {
   protected testnet: boolean;
   protected enableEvent: boolean;
   protected bitmexRequest: BitmexRequest;
-  name = 'BitmexObKeeper';
 
   VERIFY_OB_PERCENT = 0;
   VALID_OB_WS_GAP = 20 * 1000;
@@ -29,6 +28,7 @@ export class BitmexOrderBookKeeper extends BaseKeeper {
     this.testnet = options.testnet || false;
     this.enableEvent = options.enableEvent || false;
     this.bitmexRequest = new BitmexRequest({ testnet: this.testnet });
+    this.name = 'bybitObKeeper';
   }
 
   // either parsed object or raw text

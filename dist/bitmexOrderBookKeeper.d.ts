@@ -14,7 +14,6 @@ export declare class BitmexOrderBookKeeper extends BaseKeeper {
     protected testnet: boolean;
     protected enableEvent: boolean;
     protected bitmexRequest: BitmexRequest;
-    name: string;
     VERIFY_OB_PERCENT: number;
     VALID_OB_WS_GAP: number;
     constructor(options: BitmexOrderBookKeeper.Options);
