@@ -2,10 +2,10 @@ import * as _ from 'lodash';
 import { BybitRequest } from 'bitmex-request';
 import * as traderUtils from './utils/traderUtils';
 import { sortOrderBooks, verifyObPollVsObWs } from './utils/parsingUtils';
-import * as EventEmitter from 'events';
 import * as moment from 'moment';
 import { BybitOb } from './types/bybit.type';
 import { OrderBookItem, OrderBookSchema } from 'bitmex-request';
+import { BaseKeeper } from './baseKeeper';
 
 export namespace BybitOrderBookKeeper {
   export interface Options {
@@ -14,12 +14,13 @@ export namespace BybitOrderBookKeeper {
   }
 }
 
-export class BybitOrderBookKeeper extends EventEmitter {
+export class BybitOrderBookKeeper extends BaseKeeper {
   protected lastObWsTime?: Date;
   protected storedObs: Record<string, Record<string, BybitOb.OBRow>> = {};
   protected testnet: boolean;
   protected enableEvent: boolean;
-  protected bybitRequest: any;
+  protected bybitRequest: BybitRequest;
+  name = 'bybitObKeeper';
 
   VERIFY_OB_PERCENT = 0;
   VALID_OB_WS_GAP = 20 * 1000;
@@ -42,7 +43,7 @@ export class BybitOrderBookKeeper extends EventEmitter {
         this._saveWsObData(res);
       }
     } catch (e) {
-      console.error(moment().format('YYYY-MM-DD HH:mm:ss'), e);
+      this.logger.error('onSocketMessage', e);
     }
   }
 
@@ -100,10 +101,9 @@ export class BybitOrderBookKeeper extends EventEmitter {
   async getOrderBook(pairEx: string, forcePoll?: boolean): Promise<OrderBookSchema> {
     if (forcePoll || !traderUtils.isTimeWithinRange(this.lastObWsTime, this.VALID_OB_WS_GAP)) {
       if (!forcePoll)
-        console.warn(
-          moment().format('YYYY-MM-DD HH:mm:ss') +
-            ` this.lastObWsTime=${this.lastObWsTime && this.lastObWsTime.toISOString()} is outdated diff=(${Date.now() -
-              (this.lastObWsTime ? this.lastObWsTime.getTime() : 0)}), polling instead`,
+        this.logger.warn(
+          `lastObWsTime=${this.lastObWsTime && this.lastObWsTime.toISOString()} is outdated diff=(${Date.now() -
+            (this.lastObWsTime ? this.lastObWsTime.getTime() : 0)}), polling instead`,
         );
       return await this.bybitRequest.pollOrderBook(pairEx);
     }
@@ -123,9 +123,7 @@ export class BybitOrderBookKeeper extends EventEmitter {
       return obFromRealtime;
     }
 
-    console.warn(
-      moment().format('YYYY-MM-DD HH:mm:ss') + ` orderbookws not available, polling instead obWs=${obFromRealtime}`,
-    );
+    this.logger.warn(`orderbookws not available, polling instead obWs=${obFromRealtime}`);
     if (obPoll) {
       return obPoll;
     }

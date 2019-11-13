@@ -12,12 +12,12 @@ const _ = require("lodash");
 const bitmex_request_1 = require("bitmex-request");
 const traderUtils = require("./utils/traderUtils");
 const parsingUtils_1 = require("./utils/parsingUtils");
-const EventEmitter = require("events");
-const moment = require("moment");
-class BitmexOrderBookKeeper extends EventEmitter {
+const baseKeeper_1 = require("./baseKeeper");
+class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
     constructor(options) {
         super();
         this.storedObs = {};
+        this.name = 'BitmexObKeeper';
         this.VERIFY_OB_PERCENT = 0;
         this.VALID_OB_WS_GAP = 20 * 1000;
         this.testnet = options.testnet || false;
@@ -35,12 +35,12 @@ class BitmexOrderBookKeeper extends EventEmitter {
             }
         }
         catch (e) {
-            console.error(moment().format('YYYY-MM-DD HH:mm:ss'), e);
+            this.logger.error('onSocketMessage', e);
         }
     }
     _saveWsObData(obRows, action) {
         if (obRows.length === 0) {
-            console.warn(moment().format('YYYY-MM-DD HH:mm:ss') + ` empty obRows`);
+            this.logger.warn(`_saveWsObData empty obRows`);
             return;
         }
         const pair = obRows[0].symbol;
@@ -60,8 +60,8 @@ class BitmexOrderBookKeeper extends EventEmitter {
                     this.storedObs[pair][String(row.id)].side = row.side;
                 }
                 else {
-                    const errMsg = moment().format('YYYY-MM-DD HH:mm:ss') + ` update ${row.id} does not exist in currentObMap`;
-                    console.error(errMsg);
+                    const errMsg = `${this.name} update ${row.id} does not exist in currentObMap`;
+                    this.logger.error(errMsg);
                     this.emit(`error`, errMsg);
                 }
             });
@@ -99,8 +99,7 @@ class BitmexOrderBookKeeper extends EventEmitter {
         return __awaiter(this, void 0, void 0, function* () {
             if (forcePoll || !traderUtils.isTimeWithinRange(this.lastObWsTime, this.VALID_OB_WS_GAP)) {
                 if (!forcePoll)
-                    console.warn(moment().format('YYYY-MM-DD HH:mm:ss') +
-                        ` this.lastObWsTime=${this.lastObWsTime} is outdated, polling instead`);
+                    this.logger.warn(`lastObWsTime=${this.lastObWsTime} is outdated, polling instead`);
                 return yield this.bitmexRequest.pollOrderBook(pairEx);
             }
             let obPoll;
@@ -115,7 +114,7 @@ class BitmexOrderBookKeeper extends EventEmitter {
                 }
                 return obFromRealtime;
             }
-            console.warn(moment().format('YYYY-MM-DD HH:mm:ss') + ` orderbookws not available, polling instead obWs=${obFromRealtime}`);
+            this.logger.warn(`orderbookws not available, polling instead obWs=${obFromRealtime}`);
             if (obPoll) {
                 return obPoll;
             }

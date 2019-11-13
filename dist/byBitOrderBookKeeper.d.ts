@@ -1,18 +1,20 @@
-import * as EventEmitter from 'events';
+import { BybitRequest } from 'bitmex-request';
 import { BybitOb } from './types/bybit.type';
 import { OrderBookSchema } from 'bitmex-request';
+import { BaseKeeper } from "./baseKeeper";
 export declare namespace BybitOrderBookKeeper {
     interface Options {
         testnet?: boolean;
         enableEvent?: boolean;
     }
 }
-export declare class BybitOrderBookKeeper extends EventEmitter {
+export declare class BybitOrderBookKeeper extends BaseKeeper {
     protected lastObWsTime?: Date;
     protected storedObs: Record<string, Record<string, BybitOb.OBRow>>;
     protected testnet: boolean;
     protected enableEvent: boolean;
-    protected bybitRequest: any;
+    protected bybitRequest: BybitRequest;
+    name: string;
     VERIFY_OB_PERCENT: number;
     VALID_OB_WS_GAP: number;
     constructor(options: BybitOrderBookKeeper.Options);

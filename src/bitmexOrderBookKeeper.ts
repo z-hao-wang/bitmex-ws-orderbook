@@ -6,6 +6,7 @@ import * as EventEmitter from 'events';
 import * as moment from 'moment';
 import { BitmexOb } from './types/bitmex.type';
 import { OrderBookItem, OrderBookSchema } from 'bitmex-request';
+import { BaseKeeper } from './baseKeeper';
 
 export namespace BitmexOrderBookKeeper {
   export interface Options {
@@ -14,12 +15,13 @@ export namespace BitmexOrderBookKeeper {
   }
 }
 
-export class BitmexOrderBookKeeper extends EventEmitter {
+export class BitmexOrderBookKeeper extends BaseKeeper {
   protected lastObWsTime?: Date;
   protected storedObs: Record<string, Record<string, BitmexOb.OBRow>> = {};
   protected testnet: boolean;
   protected enableEvent: boolean;
   protected bitmexRequest: BitmexRequest;
+  name = 'BitmexObKeeper';
 
   VERIFY_OB_PERCENT = 0;
   VALID_OB_WS_GAP = 20 * 1000;
@@ -41,13 +43,13 @@ export class BitmexOrderBookKeeper extends EventEmitter {
         this._saveWsObData(data, action);
       }
     } catch (e) {
-      console.error(moment().format('YYYY-MM-DD HH:mm:ss'), e);
+      this.logger.error('onSocketMessage', e);
     }
   }
 
   protected _saveWsObData(obRows: BitmexOb.OrderBookItem[], action: string) {
     if (obRows.length === 0) {
-      console.warn(moment().format('YYYY-MM-DD HH:mm:ss') + ` empty obRows`);
+      this.logger.warn(`_saveWsObData empty obRows`);
       return;
     }
     const pair = obRows[0].symbol;
@@ -65,8 +67,8 @@ export class BitmexOrderBookKeeper extends EventEmitter {
           this.storedObs[pair][String(row.id)].size = row.size;
           this.storedObs[pair][String(row.id)].side = row.side;
         } else {
-          const errMsg = moment().format('YYYY-MM-DD HH:mm:ss') + ` update ${row.id} does not exist in currentObMap`;
-          console.error(errMsg);
+          const errMsg = `${this.name} update ${row.id} does not exist in currentObMap`;
+          this.logger.error(errMsg);
           this.emit(`error`, errMsg);
         }
       });
@@ -105,11 +107,7 @@ export class BitmexOrderBookKeeper extends EventEmitter {
   // Get WS ob, and fall back to poll. also verify ws ob with poll ob
   async getOrderBook(pairEx: string, forcePoll?: boolean): Promise<OrderBookSchema> {
     if (forcePoll || !traderUtils.isTimeWithinRange(this.lastObWsTime, this.VALID_OB_WS_GAP)) {
-      if (!forcePoll)
-        console.warn(
-          moment().format('YYYY-MM-DD HH:mm:ss') +
-            ` this.lastObWsTime=${this.lastObWsTime} is outdated, polling instead`,
-        );
+      if (!forcePoll) this.logger.warn(`lastObWsTime=${this.lastObWsTime} is outdated, polling instead`);
       return await this.bitmexRequest.pollOrderBook(pairEx);
     }
     let obPoll;
@@ -128,9 +126,7 @@ export class BitmexOrderBookKeeper extends EventEmitter {
       return obFromRealtime;
     }
 
-    console.warn(
-      moment().format('YYYY-MM-DD HH:mm:ss') + ` orderbookws not available, polling instead obWs=${obFromRealtime}`,
-    );
+    this.logger.warn(`orderbookws not available, polling instead obWs=${obFromRealtime}`);
     if (obPoll) {
       return obPoll;
     }
