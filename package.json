@@ -1,6 +1,6 @@
 {
   "name": "bitmex-ws-orderbook",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -24,10 +24,10 @@
     "url": "https://github.com/z-hao-wang/bitmex-ws-orderbook.git"
   },
   "dependencies": {
+    "bitmex-request": "0.0.25",
     "lodash": "^4.17.11",
     "moment": "^2.24.0",
-    "request": "^2.88.0",
-    "bitmex-request": "0.0.23"
+    "request": "^2.88.0"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.129",
