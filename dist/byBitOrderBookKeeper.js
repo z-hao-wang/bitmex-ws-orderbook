@@ -86,6 +86,11 @@ class BybitOrderBookKeeper extends baseKeeper_1.BaseKeeper {
             asks: asksUnsorted,
         });
     }
+    pollOrderBook(pairEx) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.bybitRequest.pollOrderBook(pairEx);
+        });
+    }
     // Get WS ob, and fall back to poll. also verify ws ob with poll ob
     getOrderBook(pairEx, forcePoll) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -93,12 +98,12 @@ class BybitOrderBookKeeper extends baseKeeper_1.BaseKeeper {
                 if (!forcePoll)
                     this.logger.warn(`lastObWsTime=${this.lastObWsTime && this.lastObWsTime.toISOString()} is outdated diff=(${Date.now() -
                         (this.lastObWsTime ? this.lastObWsTime.getTime() : 0)}), polling instead`);
-                return yield this.bybitRequest.pollOrderBook(pairEx);
+                return yield this.pollOrderBookWithRateLimit(pairEx);
             }
             let obPoll;
             const verifyWithPoll = Math.random() < this.VERIFY_OB_PERCENT;
             if (verifyWithPoll) {
-                obPoll = yield this.bybitRequest.pollOrderBook(pairEx);
+                obPoll = yield this.pollOrderBookWithRateLimit(pairEx);
             }
             const obFromRealtime = this._getCurrentRealTimeOB(pairEx);
             if (obFromRealtime && obFromRealtime.bids.length > 0 && obFromRealtime.asks.length > 0) {
@@ -111,7 +116,7 @@ class BybitOrderBookKeeper extends baseKeeper_1.BaseKeeper {
             if (obPoll) {
                 return obPoll;
             }
-            return yield this.bybitRequest.pollOrderBook(pairEx);
+            return yield this.pollOrderBookWithRateLimit(pairEx);
         });
     }
 }

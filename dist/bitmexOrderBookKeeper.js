@@ -94,18 +94,23 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
             asks: asksUnsorted,
         });
     }
+    pollOrderBook(pairEx) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.bitmexRequest.pollOrderBook(pairEx);
+        });
+    }
     // Get WS ob, and fall back to poll. also verify ws ob with poll ob
     getOrderBook(pairEx, forcePoll) {
         return __awaiter(this, void 0, void 0, function* () {
             if (forcePoll || !traderUtils.isTimeWithinRange(this.lastObWsTime, this.VALID_OB_WS_GAP)) {
                 if (!forcePoll)
                     this.logger.warn(`lastObWsTime=${this.lastObWsTime} is outdated, polling instead`);
-                return yield this.bitmexRequest.pollOrderBook(pairEx);
+                return yield this.pollOrderBookWithRateLimit(pairEx);
             }
             let obPoll;
             const verifyWithPoll = Math.random() < this.VERIFY_OB_PERCENT;
             if (verifyWithPoll) {
-                obPoll = yield this.bitmexRequest.pollOrderBook(pairEx);
+                obPoll = yield this.pollOrderBookWithRateLimit(pairEx);
             }
             const obFromRealtime = this._getCurrentRealTimeOB(pairEx);
             if (obFromRealtime && obFromRealtime.bids.length > 0 && obFromRealtime.asks.length > 0) {
@@ -118,7 +123,7 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
             if (obPoll) {
                 return obPoll;
             }
-            return yield this.bitmexRequest.pollOrderBook(pairEx);
+            return yield this.pollOrderBookWithRateLimit(pairEx);
         });
     }
 }

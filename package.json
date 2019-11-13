@@ -1,6 +1,6 @@
 {
   "name": "bitmex-ws-orderbook",
-  "version": "1.0.21",
+  "version": "1.0.22",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "bitmex-request": "0.0.32",
-    "el-logger": "1.0.3",
+    "el-logger": "1.0.4",
     "lodash": "4.17.15"
   },
   "devDependencies": {

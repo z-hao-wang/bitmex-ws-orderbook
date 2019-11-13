@@ -102,17 +102,21 @@ export class BitmexOrderBookKeeper extends BaseKeeper {
     });
   }
 
+  async pollOrderBook(pairEx: string): Promise<OrderBookSchema> {
+    return await this.bitmexRequest.pollOrderBook(pairEx);
+  }
+
   // Get WS ob, and fall back to poll. also verify ws ob with poll ob
   async getOrderBook(pairEx: string, forcePoll?: boolean): Promise<OrderBookSchema> {
     if (forcePoll || !traderUtils.isTimeWithinRange(this.lastObWsTime, this.VALID_OB_WS_GAP)) {
       if (!forcePoll) this.logger.warn(`lastObWsTime=${this.lastObWsTime} is outdated, polling instead`);
-      return await this.bitmexRequest.pollOrderBook(pairEx);
+      return await this.pollOrderBookWithRateLimit(pairEx);
     }
     let obPoll;
 
     const verifyWithPoll = Math.random() < this.VERIFY_OB_PERCENT;
     if (verifyWithPoll) {
-      obPoll = await this.bitmexRequest.pollOrderBook(pairEx);
+      obPoll = await this.pollOrderBookWithRateLimit(pairEx);
     }
 
     const obFromRealtime = this._getCurrentRealTimeOB(pairEx);
@@ -128,6 +132,6 @@ export class BitmexOrderBookKeeper extends BaseKeeper {
     if (obPoll) {
       return obPoll;
     }
-    return await this.bitmexRequest.pollOrderBook(pairEx);
+    return await this.pollOrderBookWithRateLimit(pairEx);
   }
 }
