@@ -21,7 +21,7 @@ export class BybitOrderBookKeeper extends BaseKeeper {
   protected bybitRequest: BybitRequest;
   name = 'bybitObKeeper';
 
-  VERIFY_OB_PERCENT = 0;
+  VERIFY_OB_PERCENT = 0.1;
   VALID_OB_WS_GAP = 20 * 1000;
 
   constructor(options: BybitOrderBookKeeper.Options) {

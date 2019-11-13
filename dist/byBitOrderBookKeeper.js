@@ -18,7 +18,7 @@ class BybitOrderBookKeeper extends baseKeeper_1.BaseKeeper {
         super();
         this.storedObs = {};
         this.name = 'bybitObKeeper';
-        this.VERIFY_OB_PERCENT = 0;
+        this.VERIFY_OB_PERCENT = 0.1;
         this.VALID_OB_WS_GAP = 20 * 1000;
         this.testnet = options.testnet || false;
         this.enableEvent = options.enableEvent || false;
