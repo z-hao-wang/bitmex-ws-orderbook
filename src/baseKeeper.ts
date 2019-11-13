@@ -12,6 +12,10 @@ export class BaseKeeper extends EventEmitter {
     this.logger = new Logger({ name: this.name });
   }
 
+  initLogger() {
+    this.logger = new Logger({ name: this.name });
+  }
+
   // once per 2 seconds
   pollingRateLimiter = new RateLimit(1, 2);
 

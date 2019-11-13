@@ -19,6 +19,7 @@ export class BybitOrderBookKeeper extends BaseKeeper {
   protected testnet: boolean;
   protected enableEvent: boolean;
   protected bybitRequest: BybitRequest;
+  name = 'bybitObKeeper';
 
   VERIFY_OB_PERCENT = 0;
   VALID_OB_WS_GAP = 20 * 1000;
@@ -28,7 +29,8 @@ export class BybitOrderBookKeeper extends BaseKeeper {
     this.testnet = options.testnet || false;
     this.enableEvent = options.enableEvent || false;
     this.bybitRequest = new BybitRequest({ testnet: this.testnet });
-    this.name = 'bybitObKeeper';
+
+    this.initLogger();
   }
 
   // either parsed object or raw text
