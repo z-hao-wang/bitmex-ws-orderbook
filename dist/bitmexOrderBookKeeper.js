@@ -74,13 +74,13 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
         }
         this.lastObWsTime = new Date();
         if (this.enableEvent) {
-            this.emit(`orderbook`, this._getCurrentRealTimeOB(pair));
+            this.emit(`orderbook`, this.getOrderBookWs(pair));
         }
     }
     onOrderBookUpdated(callback) {
         this.on('orderbook', callback);
     }
-    _getCurrentRealTimeOB(pair) {
+    getOrderBookWs(pair) {
         const dataRaw = this.storedObs[pair];
         if (!dataRaw)
             return null;
@@ -113,7 +113,7 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
             if (verifyWithPoll) {
                 obPoll = yield this.pollOrderBookWithRateLimit(pairEx);
             }
-            const obFromRealtime = this._getCurrentRealTimeOB(pairEx);
+            const obFromRealtime = this.getOrderBookWs(pairEx);
             if (obFromRealtime && obFromRealtime.bids.length > 0 && obFromRealtime.asks.length > 0) {
                 if (verifyWithPoll) {
                     parsingUtils_1.verifyObPollVsObWs(obPoll, obFromRealtime);

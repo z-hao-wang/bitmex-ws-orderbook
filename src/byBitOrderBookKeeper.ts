@@ -74,7 +74,7 @@ export class BybitOrderBookKeeper extends BaseKeeper {
 
     this.lastObWsTime = new Date();
     if (this.enableEvent) {
-      this.emit(`orderbook`, this._getCurrentRealTimeOB(obs.topic.match(/orderBookL2_25\.(.*)/)![1]));
+      this.emit(`orderbook`, this.getOrderBookWs(obs.topic.match(/orderBookL2_25\.(.*)/)![1]));
     }
   }
 
@@ -82,7 +82,7 @@ export class BybitOrderBookKeeper extends BaseKeeper {
     this.on('orderbook', callback);
   }
 
-  protected _getCurrentRealTimeOB(pair: string): OrderBookSchema | null {
+  getOrderBookWs(pair: string): OrderBookSchema | null {
     const dataRaw = this.storedObs[pair];
     if (!dataRaw) return null;
     const bidsUnsortedRaw = _.filter(dataRaw, o => o.side === 'Buy' && o.size > 0);
@@ -119,7 +119,7 @@ export class BybitOrderBookKeeper extends BaseKeeper {
       obPoll = await this.pollOrderBookWithRateLimit(pairEx);
     }
 
-    const obFromRealtime = this._getCurrentRealTimeOB(pairEx);
+    const obFromRealtime = this.getOrderBookWs(pairEx);
 
     if (obFromRealtime && obFromRealtime.bids.length > 0 && obFromRealtime.asks.length > 0) {
       if (verifyWithPoll) {

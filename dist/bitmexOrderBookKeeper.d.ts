@@ -21,7 +21,7 @@ export declare class BitmexOrderBookKeeper extends BaseKeeper {
     onSocketMessage(msg: any): void;
     protected _saveWsObData(obRows: BitmexOb.OrderBookItem[], action: string): void;
     onOrderBookUpdated(callback: (ob: OrderBookSchema) => any): void;
-    protected _getCurrentRealTimeOB(pair: string): OrderBookSchema | null;
+    getOrderBookWs(pair: string): OrderBookSchema | null;
     pollOrderBook(pairEx: string): Promise<OrderBookSchema>;
     getOrderBook(pairEx: string, forcePoll?: boolean): Promise<OrderBookSchema>;
 }
