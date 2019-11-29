@@ -7,9 +7,8 @@ import { OrderBookItem, OrderBookSchema } from 'bitmex-request';
 import { BaseKeeper } from './baseKeeper';
 
 export namespace BybitOrderBookKeeper {
-  export interface Options {
+  export interface Options extends BaseKeeper.Options {
     testnet?: boolean;
-    enableEvent?: boolean;
   }
 }
 
@@ -17,7 +16,6 @@ export class BybitOrderBookKeeper extends BaseKeeper {
   protected lastObWsTime?: Date;
   protected storedObs: Record<string, Record<string, BybitOb.OBRow>> = {};
   protected testnet: boolean;
-  protected enableEvent: boolean;
   protected bybitRequest: BybitRequest;
   name = 'bybitObKeeper';
 
@@ -25,9 +23,8 @@ export class BybitOrderBookKeeper extends BaseKeeper {
   VALID_OB_WS_GAP = 20 * 1000;
 
   constructor(options: BybitOrderBookKeeper.Options) {
-    super();
+    super(options);
     this.testnet = options.testnet || false;
-    this.enableEvent = options.enableEvent || false;
     this.bybitRequest = new BybitRequest({ testnet: this.testnet });
 
     this.initLogger();
@@ -76,10 +73,6 @@ export class BybitOrderBookKeeper extends BaseKeeper {
     if (this.enableEvent) {
       this.emit(`orderbook`, this.getOrderBookWs(obs.topic.match(/orderBookL2_25\.(.*)/)![1]));
     }
-  }
-
-  onOrderBookUpdated(callback: (ob: OrderBookSchema) => any) {
-    this.on('orderbook', callback);
   }
 
   getOrderBookWs(pair: string): OrderBookSchema | null {

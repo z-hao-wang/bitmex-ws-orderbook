@@ -1,19 +1,31 @@
 import * as EventEmitter from 'events';
 import { Logger, RateLimit } from 'el-logger';
 import { OrderBookSchema } from 'bitmex-request';
+import { BitfinexObKeeper } from './bitfinexObKeeper';
 
+export namespace BaseKeeper {
+  export interface Options {
+    enableEvent?: boolean;
+  }
+}
 export class BaseKeeper extends EventEmitter {
   protected logger: Logger;
   name = 'default'; // override this
   cachedPollOrderBook: Record<string, OrderBookSchema> = {};
+  protected enableEvent: boolean;
 
-  constructor() {
+  constructor(options: BaseKeeper.Options) {
     super();
+    this.enableEvent = options.enableEvent || false;
     this.logger = new Logger({ name: this.name });
   }
 
   initLogger() {
     this.logger = new Logger({ name: this.name });
+  }
+
+  onOrderBookUpdated(callback: (ob: OrderBookSchema) => any) {
+    this.on('orderbook', callback);
   }
 
   // once per 2 seconds

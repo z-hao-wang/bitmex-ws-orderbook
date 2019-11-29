@@ -1,0 +1,46 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`gdax ob keeper works with replacing 1`] = `
+Object {
+  "asks": Array [
+    Array [
+      152.48,
+      8.18084404,
+    ],
+    Array [
+      152.49,
+      14.31512963,
+    ],
+    Array [
+      152.5,
+      25.52159388,
+    ],
+    Array [
+      152.51,
+      6,
+    ],
+    Array [
+      152.53,
+      70,
+    ],
+  ],
+  "bids": Array [
+    Array [
+      152.46,
+      40.50152043,
+    ],
+    Array [
+      152.35,
+      0.68514292,
+    ],
+    Array [
+      152.34,
+      11.3,
+    ],
+    Array [
+      152.32,
+      13,
+    ],
+  ],
+}
+`;

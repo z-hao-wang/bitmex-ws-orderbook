@@ -3,16 +3,14 @@ import { BybitOb } from './types/bybit.type';
 import { OrderBookSchema } from 'bitmex-request';
 import { BaseKeeper } from './baseKeeper';
 export declare namespace BybitOrderBookKeeper {
-    interface Options {
+    interface Options extends BaseKeeper.Options {
         testnet?: boolean;
-        enableEvent?: boolean;
     }
 }
 export declare class BybitOrderBookKeeper extends BaseKeeper {
     protected lastObWsTime?: Date;
     protected storedObs: Record<string, Record<string, BybitOb.OBRow>>;
     protected testnet: boolean;
-    protected enableEvent: boolean;
     protected bybitRequest: BybitRequest;
     name: string;
     VERIFY_OB_PERCENT: number;
@@ -20,7 +18,6 @@ export declare class BybitOrderBookKeeper extends BaseKeeper {
     constructor(options: BybitOrderBookKeeper.Options);
     onSocketMessage(msg: any): void;
     protected _saveWsObData(obs: BybitOb.OrderBooks): void;
-    onOrderBookUpdated(callback: (ob: OrderBookSchema) => any): void;
     getOrderBookWs(pair: string): OrderBookSchema | null;
     pollOrderBook(pairEx: string): Promise<OrderBookSchema>;
     getOrderBook(pairEx: string, forcePoll?: boolean): Promise<OrderBookSchema>;

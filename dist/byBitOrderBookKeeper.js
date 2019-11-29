@@ -1,9 +1,10 @@
 "use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
         function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
@@ -15,13 +16,12 @@ const parsingUtils_1 = require("./utils/parsingUtils");
 const baseKeeper_1 = require("./baseKeeper");
 class BybitOrderBookKeeper extends baseKeeper_1.BaseKeeper {
     constructor(options) {
-        super();
+        super(options);
         this.storedObs = {};
         this.name = 'bybitObKeeper';
         this.VERIFY_OB_PERCENT = 0.1;
         this.VALID_OB_WS_GAP = 20 * 1000;
         this.testnet = options.testnet || false;
-        this.enableEvent = options.enableEvent || false;
         this.bybitRequest = new bitmex_request_1.BybitRequest({ testnet: this.testnet });
         this.initLogger();
     }
@@ -68,9 +68,6 @@ class BybitOrderBookKeeper extends baseKeeper_1.BaseKeeper {
         if (this.enableEvent) {
             this.emit(`orderbook`, this.getOrderBookWs(obs.topic.match(/orderBookL2_25\.(.*)/)[1]));
         }
-    }
-    onOrderBookUpdated(callback) {
-        this.on('orderbook', callback);
     }
     getOrderBookWs(pair) {
         const dataRaw = this.storedObs[pair];

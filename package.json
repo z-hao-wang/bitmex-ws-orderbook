@@ -9,7 +9,8 @@
     "tsc": "tsc",
     "tsc:watch": "tsc -w",
     "prettier": "node ./node_modules/prettier/bin-prettier.js --parser=typescript --single-quote --trailing-comma=all --write --print-width=120 'src/**/*.ts'",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "author": "Hao Wang",
   "license": "MIT",
@@ -29,11 +30,15 @@
     "lodash": "4.17.15"
   },
   "devDependencies": {
+    "@types/jest": "^24.0.23",
     "@types/lodash": "^4.14.129",
     "@types/request": "^2.48.1",
     "@types/ws": "^6.0.1",
+    "jest": "^24.9.0",
     "prettier": "^1.16.4",
     "rimraf": "^3.0.0",
+    "ts-jest": "^24.2.0",
+    "typescript": "^3.7.2",
     "websocket-reconnect": "^1.0.2",
     "ws": "^7.0.0"
   }

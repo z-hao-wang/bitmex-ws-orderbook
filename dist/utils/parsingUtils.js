@@ -43,7 +43,7 @@ function verifyObPollVsObWs(obPoll, obWs) {
 }
 exports.verifyObPollVsObWs = verifyObPollVsObWs;
 function sortOrderBooks(orderBooks) {
-    return Object.assign({}, orderBooks, { bids: sortByDesc(orderBooks.bids, 'r'), asks: sortByAsc(orderBooks.asks, 'r') });
+    return Object.assign(Object.assign({}, orderBooks), { bids: sortByDesc(orderBooks.bids, 'r'), asks: sortByAsc(orderBooks.asks, 'r') });
 }
 exports.sortOrderBooks = sortOrderBooks;
 function sortByAsc(items, key) {
