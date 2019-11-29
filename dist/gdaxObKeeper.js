@@ -112,7 +112,7 @@ class GdaxObKeeper extends baseKeeper_1.BaseKeeper {
     formatOrderBookItem(orderBookItem) {
         return {
             r: orderBookItem[0],
-            a: orderBookItem[2],
+            a: orderBookItem[1],
         };
     }
     getOrderBookWs(pair) {
