@@ -137,7 +137,7 @@ export class GdaxObKeeper extends BaseKeeper {
   formatOrderBookItem(orderBookItem: number[]): OrderBookItem {
     return {
       r: orderBookItem[0],
-      a: orderBookItem[2],
+      a: orderBookItem[1],
     };
   }
 
