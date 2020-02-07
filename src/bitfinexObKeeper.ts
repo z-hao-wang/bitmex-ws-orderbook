@@ -111,7 +111,7 @@ export class BitfinexObKeeper extends BaseKeeper {
       asks: _.filter(this.obCache[pair], ob => ob[2] < 0).map(this.formatOrderBookItem),
     };
     if (orderbooks.asks.length == 0 || orderbooks.bids.length === 0) {
-      console.error(`bitfinex invalid bids or asks this.obCache[pair] ${pair}`, this.obCache[pair]);
+      this.logger.error(`bitfinex invalid bids or asks this.obCache[pair] ${pair}`, this.obCache[pair]);
     }
     this.lastObWsTime = new Date();
     return orderbooks;
