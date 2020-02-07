@@ -1,7 +1,6 @@
 import * as EventEmitter from 'events';
 import { Logger, RateLimit } from 'el-logger';
 import { OrderBookSchema } from 'bitmex-request';
-import { BitfinexObKeeper } from './bitfinexObKeeper';
 
 export namespace BaseKeeper {
   export interface Options {
