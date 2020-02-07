@@ -9,6 +9,7 @@ export declare namespace BaseKeeper {
 }
 export declare class BaseKeeper extends EventEmitter {
     protected logger: Logger;
+    lastObWsTime?: Date;
     name: string;
     cachedPollOrderBook: Record<string, OrderBookSchema>;
     protected enableEvent: boolean;

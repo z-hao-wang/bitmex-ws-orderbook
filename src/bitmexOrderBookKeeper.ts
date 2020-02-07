@@ -13,7 +13,6 @@ export namespace BitmexOrderBookKeeper {
 }
 
 export class BitmexOrderBookKeeper extends BaseKeeper {
-  protected lastObWsTime?: Date;
   protected storedObs: Record<string, Record<string, BitmexOb.OBRow>> = {};
   protected testnet: boolean;
   protected bitmexRequest: BitmexRequest;

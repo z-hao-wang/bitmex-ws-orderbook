@@ -13,7 +13,6 @@ export namespace BybitOrderBookKeeper {
 }
 
 export class BybitOrderBookKeeper extends BaseKeeper {
-  protected lastObWsTime?: Date;
   protected storedObs: Record<string, Record<string, BybitOb.OBRow>> = {};
   protected testnet: boolean;
   protected bybitRequest: BybitRequest;
