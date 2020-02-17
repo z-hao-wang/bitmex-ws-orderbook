@@ -7,6 +7,7 @@ export namespace GeneticObKeeper {
     enableEvent?: boolean;
   }
 }
+
 export class GeneticObKeeper extends BaseKeeper {
   obKeepers: Record<string, GenericObKeeperShared> = {};
 
