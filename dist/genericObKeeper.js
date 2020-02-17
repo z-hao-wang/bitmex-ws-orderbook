@@ -31,6 +31,14 @@ class GenericObKeeper extends baseKeeper_1.BaseKeeper {
         }
     }
     getOrderBookWs(pair) {
+        if (!this.obKeepers[pair]) {
+            return {
+                ts: new Date(),
+                pair,
+                bids: [],
+                asks: [],
+            };
+        }
         const orderbooks = Object.assign({ ts: new Date(), pair }, this.obKeepers[pair].getOb());
         return orderbooks;
     }
