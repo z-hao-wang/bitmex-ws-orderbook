@@ -11,7 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const baseKeeper_1 = require("./baseKeeper");
 const genericObKeeperShared_1 = require("./utils/genericObKeeperShared");
-class GeneticObKeeper extends baseKeeper_1.BaseKeeper {
+class GenericObKeeper extends baseKeeper_1.BaseKeeper {
     constructor() {
         super(...arguments);
         this.obKeepers = {};
@@ -41,4 +41,4 @@ class GeneticObKeeper extends baseKeeper_1.BaseKeeper {
         this.on('orderbook', callback);
     }
 }
-exports.GeneticObKeeper = GeneticObKeeper;
+exports.GenericObKeeper = GenericObKeeper;

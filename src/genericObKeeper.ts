@@ -8,7 +8,7 @@ export namespace GeneticObKeeper {
   }
 }
 
-export class GeneticObKeeper extends BaseKeeper {
+export class GenericObKeeper extends BaseKeeper {
   obKeepers: Record<string, GenericObKeeperShared> = {};
 
   // if initial, return true

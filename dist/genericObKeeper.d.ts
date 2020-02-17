@@ -6,7 +6,7 @@ export declare namespace GeneticObKeeper {
         enableEvent?: boolean;
     }
 }
-export declare class GeneticObKeeper extends BaseKeeper {
+export declare class GenericObKeeper extends BaseKeeper {
     obKeepers: Record<string, GenericObKeeperShared>;
     onReceiveOb(params: {
         pair: string;
