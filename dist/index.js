@@ -7,3 +7,4 @@ __export(require("./bitmexOrderBookKeeper"));
 __export(require("./byBitOrderBookKeeper"));
 __export(require("./bitfinexObKeeper"));
 __export(require("./gdaxObKeeper"));
+__export(require("./geneticObKeeper"));
