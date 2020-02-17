@@ -27,7 +27,16 @@ export class GenericObKeeper extends BaseKeeper {
     }
   }
 
-  getOrderBookWs(pair: string) {
+  getOrderBookWs(pair: string): OrderBookSchema {
+    if (!this.obKeepers[pair]) {
+      return {
+        ts: new Date(),
+        pair,
+        bids: [],
+        asks: [],
+      };
+    }
+
     const orderbooks: OrderBookSchema = {
       ts: new Date(),
       pair,
