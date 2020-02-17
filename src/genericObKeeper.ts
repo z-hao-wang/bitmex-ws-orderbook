@@ -12,10 +12,13 @@ export class GenericObKeeper extends BaseKeeper {
   obKeepers: Record<string, GenericObKeeperShared> = {};
 
   // if initial, return true
-  onReceiveOb(params: { pair: string; bids: OrderBookItem[]; asks: OrderBookItem[] }) {
-    const { pair, bids, asks } = params;
+  onReceiveOb(params: { pair: string; bids: OrderBookItem[]; asks: OrderBookItem[]; isNewSnapshot?: boolean }) {
+    const { pair, bids, asks, isNewSnapshot } = params;
     if (!this.obKeepers[pair]) {
       this.obKeepers[pair] = new GenericObKeeperShared();
+    }
+    if (isNewSnapshot) {
+      this.obKeepers[pair].init();
     }
     this.obKeepers[pair].onReceiveOb({ bids, asks });
 

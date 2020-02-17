@@ -12,6 +12,7 @@ export declare class GenericObKeeper extends BaseKeeper {
         pair: string;
         bids: OrderBookItem[];
         asks: OrderBookItem[];
+        isNewSnapshot?: boolean;
     }): void;
     getOrderBookWs(pair: string): OrderBookSchema;
     getOrderBook(pair: string): Promise<OrderBookSchema>;

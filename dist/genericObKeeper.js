@@ -18,9 +18,12 @@ class GenericObKeeper extends baseKeeper_1.BaseKeeper {
     }
     // if initial, return true
     onReceiveOb(params) {
-        const { pair, bids, asks } = params;
+        const { pair, bids, asks, isNewSnapshot } = params;
         if (!this.obKeepers[pair]) {
             this.obKeepers[pair] = new genericObKeeperShared_1.GenericObKeeperShared();
+        }
+        if (isNewSnapshot) {
+            this.obKeepers[pair].init();
         }
         this.obKeepers[pair].onReceiveOb({ bids, asks });
         if (this.enableEvent) {
