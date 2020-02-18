@@ -7,6 +7,7 @@ export declare namespace BitmexOb {
     side: Side;
     price: number;
     size: number;
+    idx?: number;
   }
 
   interface OrderBookItem {

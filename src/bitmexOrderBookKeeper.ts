@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import { BitmexRequest } from 'bitmex-request';
 import * as traderUtils from './utils/traderUtils';
-import { sortOrderBooks, verifyObPollVsObWs } from './utils/parsingUtils';
+import { sortByAsc, sortByDesc, sortOrderBooks, verifyObPollVsObWs } from './utils/parsingUtils';
 import { BitmexOb } from './types/bitmex.type';
 import { OrderBookItem, OrderBookSchema } from 'bitmex-request';
 import { BaseKeeper } from './baseKeeper';
@@ -16,6 +16,8 @@ export class BitmexOrderBookKeeper extends BaseKeeper {
   protected storedObs: Record<string, Record<string, BitmexOb.OBRow>> = {};
   protected testnet: boolean;
   protected bitmexRequest: BitmexRequest;
+  protected storedObsOrdered: Record<string, BitmexOb.OBRow[]> = {};
+  protected currentSplitIndex = 0;
   name = 'bitmexObKeeper';
 
   VERIFY_OB_PERCENT = 0;
@@ -55,10 +57,36 @@ export class BitmexOrderBookKeeper extends BaseKeeper {
   // directly use this for process backtesting data.
   onReceiveOb(obRows: BitmexOb.OrderBookItem[], action: string, pair: string) {
     this.storedObs[pair] = this.storedObs[pair] || {};
+    this.storedObsOrdered[pair] = this.storedObsOrdered[pair] || [];
     if (_.includes(['partial', 'insert'], action)) {
       // first init, refresh ob data.
       _.each(obRows, row => {
         this.storedObs[pair][String(row.id)] = row;
+        const newRowRef = this.storedObs[pair][String(row.id)];
+        if (this.storedObsOrdered[pair].length === 0) {
+          this.storedObsOrdered[pair].push(newRowRef);
+        } else if (row.price > _.last(this.storedObsOrdered[pair])!.price) {
+          this.storedObsOrdered[pair].push(newRowRef);
+        } else if (row.price < _.first(this.storedObsOrdered[pair])!.price) {
+          this.storedObsOrdered[pair].unshift(newRowRef);
+        } else {
+          for (let i = 0; i < this.storedObsOrdered[pair].length; i++) {
+            if (row.price === this.storedObsOrdered[pair][i].price) {
+              this.storedObsOrdered[pair][i] = newRowRef;
+              break;
+            } else if (row.price > this.storedObsOrdered[pair][i].price) {
+              this.storedObsOrdered[pair].splice(i, 0, newRowRef);
+              break;
+            }
+          }
+        }
+      });
+      // reverse build index
+      _.each(this.storedObsOrdered[pair], (o, i) => {
+        // undefined is allowed due to it can be deleted
+        if (this.storedObs[pair][String(o.id)]) {
+          this.storedObs[pair][String(o.id)].idx = i;
+        }
       });
     } else if (action === 'update') {
       // if this order exists, we update it, otherwise don't worry
@@ -66,7 +94,10 @@ export class BitmexOrderBookKeeper extends BaseKeeper {
         if (this.storedObs[pair][String(row.id)]) {
           // must update one by one because update doesn't contain price
           this.storedObs[pair][String(row.id)].size = row.size;
-          this.storedObs[pair][String(row.id)].side = row.side;
+          if (this.storedObs[pair][String(row.id)].side !== row.side) {
+            this.storedObs[pair][String(row.id)].side = row.side;
+            this.currentSplitIndex = this.storedObs[pair][String(row.id)].idx!;
+          }
         } else {
           const errMsg = `${this.name} update ${row.id} does not exist in currentObMap`;
           this.logger.error(errMsg);
@@ -75,6 +106,8 @@ export class BitmexOrderBookKeeper extends BaseKeeper {
       });
     } else if (action === 'delete') {
       _.each(obRows, row => {
+        const idx = this.storedObs[pair][String(row.id)].idx!;
+        this.storedObsOrdered[pair][idx].size = 0;
         delete this.storedObs[pair][String(row.id)];
       });
     }
@@ -84,54 +117,95 @@ export class BitmexOrderBookKeeper extends BaseKeeper {
     return this.storedObs[pair];
   }
 
-  getOrderBookWs(pair: string, depth?: number): OrderBookSchema | null {
+  getOrderBookWs(pair: string, depth: number = 5): OrderBookSchema | null {
     const dataRaw = this.storedObs[pair];
     if (!dataRaw) return null;
 
-    if (depth === 1) {
-      const maxBid = {
-        r: 0,
-        a: 0,
-      };
-      const minAsk = {
-        r: 99999999999,
-        a: 0,
-      };
-      for (let key in dataRaw) {
-        if (dataRaw[key].side === 'Buy' && dataRaw[key].price > maxBid.r) {
-          maxBid.r = dataRaw[key].price;
-          maxBid.a = dataRaw[key].size;
-        } else if (dataRaw[key].side === 'Sell' && dataRaw[key].price < minAsk.r) {
-          minAsk.r = dataRaw[key].price;
-          minAsk.a = dataRaw[key].size;
+    if (1) {
+      const bidI = this.findBestBid(pair).i;
+      const askI = this.findBestAsk(pair).i;
+      const asks: OrderBookItem[] = [];
+      const bids: OrderBookItem[] = [];
+      const storedOrdered = this.storedObsOrdered[pair];
+      for (let i = bidI; i >= 0 && bids.length < depth; i--) {
+        const item = storedOrdered[i];
+        if (item.size > 0) {
+          bids.push({
+            r: item.price,
+            a: item.size,
+          });
         }
       }
-      const bidsUnsorted: OrderBookItem[] = [maxBid];
-      const asksUnsorted: OrderBookItem[] = [minAsk];
+      for (let i = askI; i <= storedOrdered.length && asks.length < depth; i++) {
+        const item = storedOrdered[i];
+        if (item.size > 0) {
+          asks.push({
+            r: item.price,
+            a: item.size,
+          });
+        }
+      }
       return {
         pair,
         ts: this.lastObWsTime!,
-        bids: bidsUnsorted,
-        asks: asksUnsorted,
+        bids,
+        asks,
       };
     } else {
+      // old method, slow
       const bidsUnsortedRaw = _.filter(dataRaw, o => o.side === 'Buy' && o.size > 0);
       const askUnsortedRaw = _.filter(dataRaw, o => o.side === 'Sell' && o.size > 0);
-      const bidsUnsorted: OrderBookItem[] = _.map(bidsUnsortedRaw, d => ({
+      const bids: OrderBookItem[] = _.map(sortByDesc(bidsUnsortedRaw, 'price').slice(0, depth), d => ({
         r: d.price,
         a: d.size,
       }));
-      const asksUnsorted: OrderBookItem[] = _.map(askUnsortedRaw, d => ({
+      const asks: OrderBookItem[] = _.map(sortByAsc(askUnsortedRaw, 'price').slice(0, depth), d => ({
         r: d.price,
         a: d.size,
       }));
 
-      return sortOrderBooks({
+      return {
         pair,
         ts: this.lastObWsTime!,
-        bids: depth ? bidsUnsorted.slice(0, depth) : bidsUnsorted,
-        asks: depth ? asksUnsorted.slice(0, depth) : asksUnsorted,
-      });
+        bids,
+        asks,
+      };
+    }
+  }
+
+  protected findBestBid(pair: string) {
+    let i = this.currentSplitIndex;
+    const sideSplit = this.storedObsOrdered[pair][this.currentSplitIndex].side;
+    if (sideSplit === 'Buy') {
+      // go down until we see Sell
+      while (i < this.storedObsOrdered[pair].length && this.storedObsOrdered[pair][i].side === 'Buy') {
+        i++;
+      }
+      return { i: i - 1, bid: this.storedObsOrdered[pair][i - 1] };
+    } else {
+      // go up until we see first buy
+      while (i >= 0 && this.storedObsOrdered[pair][i].side === 'Sell') {
+        i--;
+      }
+      return { i: i, bid: this.storedObsOrdered[pair][i] };
+    }
+  }
+
+  protected findBestAsk(pair: string) {
+    let i = this.currentSplitIndex;
+    const sideSplit = this.storedObsOrdered[pair][this.currentSplitIndex].side;
+    if (sideSplit === 'Buy') {
+      // go down until we see Sell
+      while (i < this.storedObsOrdered[pair].length && this.storedObsOrdered[pair][i].side === 'Buy') {
+        i++;
+      }
+      return { i: i, ask: this.storedObsOrdered[pair][i] };
+    } else {
+      // go up until we see first buy
+      while (i >= 0 && this.storedObsOrdered[pair][i].side === 'Sell') {
+        i--;
+      }
+      return { i: i + 1, ask: this.storedObsOrdered[pair][i + 1] };
     }
   }
 
