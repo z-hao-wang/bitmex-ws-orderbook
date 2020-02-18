@@ -74,12 +74,18 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
                             this.storedObsOrdered[pair][i] = newRowRef;
                             break;
                         }
-                        else if (row.price > this.storedObsOrdered[pair][i].price) {
+                        else if (row.price < this.storedObsOrdered[pair][i].price) {
                             this.storedObsOrdered[pair].splice(i, 0, newRowRef);
                             break;
                         }
                     }
                 }
+                // ensure the data is ordered
+                // for (let i = 0; i < this.storedObsOrdered[pair].length; i++) {
+                //   if (i > 0 && this.storedObsOrdered[pair][i].price < this.storedObsOrdered[pair][i - 1].price) {
+                //     console.error(`invalid order, `, this.storedObsOrdered[pair])
+                //   }
+                // }
             });
             // reverse build index
             _.each(this.storedObsOrdered[pair], (o, i) => {
@@ -146,12 +152,12 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
                     });
                 }
             }
-            return ({
+            return {
                 pair,
                 ts: this.lastObWsTime,
                 bids,
                 asks,
-            });
+            };
         }
         else {
             // old method, slow
@@ -165,12 +171,12 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
                 r: d.price,
                 a: d.size,
             }));
-            return ({
+            return {
                 pair,
                 ts: this.lastObWsTime,
                 bids,
                 asks,
-            });
+            };
         }
     }
     findBestBid(pair) {
@@ -185,7 +191,7 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
         }
         else {
             // go up until we see first buy
-            while (i >= 0 && this.storedObsOrdered[pair][i].side === 'Sell') {
+            while (i > 0 && this.storedObsOrdered[pair][i].side === 'Sell') {
                 i--;
             }
             return { i: i, bid: this.storedObsOrdered[pair][i] };

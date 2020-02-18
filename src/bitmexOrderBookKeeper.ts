@@ -74,12 +74,18 @@ export class BitmexOrderBookKeeper extends BaseKeeper {
             if (row.price === this.storedObsOrdered[pair][i].price) {
               this.storedObsOrdered[pair][i] = newRowRef;
               break;
-            } else if (row.price > this.storedObsOrdered[pair][i].price) {
+            } else if (row.price < this.storedObsOrdered[pair][i].price) {
               this.storedObsOrdered[pair].splice(i, 0, newRowRef);
               break;
             }
           }
         }
+        // ensure the data is ordered
+        // for (let i = 0; i < this.storedObsOrdered[pair].length; i++) {
+        //   if (i > 0 && this.storedObsOrdered[pair][i].price < this.storedObsOrdered[pair][i - 1].price) {
+        //     console.error(`invalid order, `, this.storedObsOrdered[pair])
+        //   }
+        // }
       });
       // reverse build index
       _.each(this.storedObsOrdered[pair], (o, i) => {
@@ -184,7 +190,7 @@ export class BitmexOrderBookKeeper extends BaseKeeper {
       return { i: i - 1, bid: this.storedObsOrdered[pair][i - 1] };
     } else {
       // go up until we see first buy
-      while (i >= 0 && this.storedObsOrdered[pair][i].side === 'Sell') {
+      while (i > 0 && this.storedObsOrdered[pair][i].side === 'Sell') {
         i--;
       }
       return { i: i, bid: this.storedObsOrdered[pair][i] };
