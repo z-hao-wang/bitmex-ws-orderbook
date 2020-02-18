@@ -87,14 +87,38 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
             return null;
         const bidsUnsortedRaw = _.filter(dataRaw, o => o.side === 'Buy' && o.size > 0);
         const askUnsortedRaw = _.filter(dataRaw, o => o.side === 'Sell' && o.size > 0);
-        const bidsUnsorted = _.map(depth ? bidsUnsortedRaw.slice(0, depth) : bidsUnsortedRaw, d => ({ r: d.price, a: d.size }));
-        const asksUnsorted = _.map(depth ? askUnsortedRaw.slice(0, depth) : askUnsortedRaw, d => ({ r: d.price, a: d.size }));
-        return parsingUtils_1.sortOrderBooks({
-            pair,
-            ts: this.lastObWsTime,
-            bids: bidsUnsorted,
-            asks: asksUnsorted,
-        });
+        if (depth === 1) {
+            const bidsUnsorted = _.map([_.maxBy(bidsUnsortedRaw, 'r')], d => ({
+                r: d.price,
+                a: d.size,
+            }));
+            const asksUnsorted = _.map([_.minBy(askUnsortedRaw, 'r')], d => ({
+                r: d.price,
+                a: d.size,
+            }));
+            return {
+                pair,
+                ts: this.lastObWsTime,
+                bids: bidsUnsorted,
+                asks: asksUnsorted,
+            };
+        }
+        else {
+            const bidsUnsorted = _.map(bidsUnsortedRaw, d => ({
+                r: d.price,
+                a: d.size,
+            }));
+            const asksUnsorted = _.map(askUnsortedRaw, d => ({
+                r: d.price,
+                a: d.size,
+            }));
+            return parsingUtils_1.sortOrderBooks({
+                pair,
+                ts: this.lastObWsTime,
+                bids: depth ? bidsUnsorted.slice(0, depth) : bidsUnsorted,
+                asks: depth ? asksUnsorted.slice(0, depth) : asksUnsorted,
+            });
+        }
     }
     pollOrderBook(pairEx) {
         return __awaiter(this, void 0, void 0, function* () {
