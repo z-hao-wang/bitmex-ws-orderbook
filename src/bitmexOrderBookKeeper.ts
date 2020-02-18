@@ -6,6 +6,9 @@ import { BitmexOb } from './types/bitmex.type';
 import { OrderBookItem, OrderBookSchema } from 'bitmex-request';
 import { BaseKeeper } from './baseKeeper';
 
+// new method is much much faster than old one
+const USING_NEW_METHOD = true;
+
 export namespace BitmexOrderBookKeeper {
   export interface Options extends BaseKeeper.Options {
     testnet?: boolean;
@@ -126,8 +129,7 @@ export class BitmexOrderBookKeeper extends BaseKeeper {
   getOrderBookWs(pair: string, depth: number = 5): OrderBookSchema | null {
     const dataRaw = this.storedObs[pair];
     if (!dataRaw) return null;
-
-    if (1) {
+    if (USING_NEW_METHOD) {
       const bidI = this.findBestBid(pair).i;
       const askI = this.findBestAsk(pair).i;
       const asks: OrderBookItem[] = [];
