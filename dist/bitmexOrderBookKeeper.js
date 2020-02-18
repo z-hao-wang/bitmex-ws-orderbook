@@ -32,19 +32,24 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
             const { table, action, data } = res;
             // this logic is similar with transaction_flow/ob_bitmex_fx.ts
             if (table === 'orderBookL2_25') {
-                this._saveWsObData(data, action);
+                if (data.length === 0) {
+                    this.logger.warn(`_saveWsObData empty obRows`);
+                    return;
+                }
+                const pair = data[0].symbol;
+                this.onReceiveOb(data, action, pair);
+                this.lastObWsTime = new Date();
+                if (this.enableEvent) {
+                    this.emit(`orderbook`, this.getOrderBookWs(pair));
+                }
             }
         }
         catch (e) {
             this.logger.error('onSocketMessage', e);
         }
     }
-    _saveWsObData(obRows, action) {
-        if (obRows.length === 0) {
-            this.logger.warn(`_saveWsObData empty obRows`);
-            return;
-        }
-        const pair = obRows[0].symbol;
+    // directly use this for process backtesting data.
+    onReceiveOb(obRows, action, pair) {
         this.storedObs[pair] = this.storedObs[pair] || {};
         if (_.includes(['partial', 'insert'], action)) {
             // first init, refresh ob data.
@@ -72,19 +77,18 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
                 delete this.storedObs[pair][String(row.id)];
             });
         }
-        this.lastObWsTime = new Date();
-        if (this.enableEvent) {
-            this.emit(`orderbook`, this.getOrderBookWs(pair));
-        }
     }
-    getOrderBookWs(pair) {
+    getOrderBookRaw(pair) {
+        return this.storedObs[pair];
+    }
+    getOrderBookWs(pair, depth) {
         const dataRaw = this.storedObs[pair];
         if (!dataRaw)
             return null;
         const bidsUnsortedRaw = _.filter(dataRaw, o => o.side === 'Buy' && o.size > 0);
         const askUnsortedRaw = _.filter(dataRaw, o => o.side === 'Sell' && o.size > 0);
-        const bidsUnsorted = _.map(bidsUnsortedRaw, d => ({ r: d.price, a: d.size }));
-        const asksUnsorted = _.map(askUnsortedRaw, d => ({ r: d.price, a: d.size }));
+        const bidsUnsorted = _.map(depth ? bidsUnsortedRaw.slice(0, depth) : bidsUnsortedRaw, d => ({ r: d.price, a: d.size }));
+        const asksUnsorted = _.map(depth ? askUnsortedRaw.slice(0, depth) : askUnsortedRaw, d => ({ r: d.price, a: d.size }));
         return parsingUtils_1.sortOrderBooks({
             pair,
             ts: this.lastObWsTime,

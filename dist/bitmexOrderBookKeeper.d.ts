@@ -16,8 +16,9 @@ export declare class BitmexOrderBookKeeper extends BaseKeeper {
     VALID_OB_WS_GAP: number;
     constructor(options: BitmexOrderBookKeeper.Options);
     onSocketMessage(msg: any): void;
-    protected _saveWsObData(obRows: BitmexOb.OrderBookItem[], action: string): void;
-    getOrderBookWs(pair: string): OrderBookSchema | null;
+    onReceiveOb(obRows: BitmexOb.OrderBookItem[], action: string, pair: string): void;
+    getOrderBookRaw(pair: string): Record<string, BitmexOb.OBRow>;
+    getOrderBookWs(pair: string, depth?: number): OrderBookSchema | null;
     pollOrderBook(pairEx: string): Promise<OrderBookSchema>;
     getOrderBook(pairEx: string, forcePoll?: boolean): Promise<OrderBookSchema>;
 }
