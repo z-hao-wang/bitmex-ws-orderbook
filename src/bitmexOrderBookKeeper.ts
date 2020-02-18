@@ -90,14 +90,20 @@ export class BitmexOrderBookKeeper extends BaseKeeper {
     const bidsUnsortedRaw = _.filter(dataRaw, o => o.side === 'Buy' && o.size > 0);
     const askUnsortedRaw = _.filter(dataRaw, o => o.side === 'Sell' && o.size > 0);
     if (depth === 1) {
-      const bidsUnsorted: OrderBookItem[] = _.map([_.maxBy(bidsUnsortedRaw, 'price')!], d => ({
-        r: d.price,
-        a: d.size,
-      }));
-      const asksUnsorted: OrderBookItem[] = _.map([_.minBy(askUnsortedRaw, 'price')!], d => ({
-        r: d.price,
-        a: d.size,
-      }));
+      const maxBid = _.maxBy(bidsUnsortedRaw, 'price')!;
+      const bidsUnsorted: OrderBookItem[] = [
+        {
+          r: maxBid.price,
+          a: maxBid.size,
+        },
+      ];
+      const minAsk = _.minBy(askUnsortedRaw, 'price')!;
+      const asksUnsorted: OrderBookItem[] = [
+        {
+          r: minAsk.price,
+          a: minAsk.size,
+        },
+      ];
       return {
         pair,
         ts: this.lastObWsTime!,
