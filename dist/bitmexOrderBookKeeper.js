@@ -85,19 +85,31 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
         const dataRaw = this.storedObs[pair];
         if (!dataRaw)
             return null;
-        const bidsUnsortedRaw = _.filter(dataRaw, o => o.side === 'Buy' && o.size > 0);
-        const askUnsortedRaw = _.filter(dataRaw, o => o.side === 'Sell' && o.size > 0);
         if (depth === 1) {
-            const maxBid = _.maxBy(bidsUnsortedRaw, 'price');
-            const bidsUnsorted = [{
-                    r: maxBid.price,
-                    a: maxBid.size,
-                }];
-            const minAsk = _.minBy(askUnsortedRaw, 'price');
-            const asksUnsorted = [{
-                    r: minAsk.price,
-                    a: minAsk.size,
-                }];
+            const maxBid = {
+                r: 0,
+                a: 0,
+            };
+            const minAsk = {
+                r: 99999999999,
+                a: 0
+            };
+            for (let key in dataRaw) {
+                if (dataRaw[key].side === 'Buy' && dataRaw[key].price > maxBid.r) {
+                    maxBid.r = dataRaw[key].price;
+                    maxBid.a = dataRaw[key].size;
+                }
+                else if (dataRaw[key].side === 'Sell' && dataRaw[key].price < minAsk.r) {
+                    minAsk.r = dataRaw[key].price;
+                    minAsk.a = dataRaw[key].size;
+                }
+            }
+            const bidsUnsorted = [
+                maxBid
+            ];
+            const asksUnsorted = [
+                minAsk
+            ];
             return {
                 pair,
                 ts: this.lastObWsTime,
@@ -106,6 +118,8 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
             };
         }
         else {
+            const bidsUnsortedRaw = _.filter(dataRaw, o => o.side === 'Buy' && o.size > 0);
+            const askUnsortedRaw = _.filter(dataRaw, o => o.side === 'Sell' && o.size > 0);
             const bidsUnsorted = _.map(bidsUnsortedRaw, d => ({
                 r: d.price,
                 a: d.size,
