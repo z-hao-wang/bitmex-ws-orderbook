@@ -14,6 +14,8 @@ const bitmex_request_1 = require("bitmex-request");
 const traderUtils = require("./utils/traderUtils");
 const parsingUtils_1 = require("./utils/parsingUtils");
 const baseKeeper_1 = require("./baseKeeper");
+// new method is much much faster than old one
+const USING_NEW_METHOD = true;
 class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
     constructor(options) {
         super(options);
@@ -26,6 +28,14 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
         this.testnet = options.testnet || false;
         this.bitmexRequest = new bitmex_request_1.BitmexRequest({ testnet: this.testnet });
         this.initLogger();
+    }
+    bitmexObToInternalOb(ob) {
+        return {
+            s: ob.side === 'Buy' ? 0 : 1,
+            r: ob.price,
+            a: ob.size,
+            id: ob.id,
+        };
     }
     // either parsed object or raw text
     onSocketMessage(msg) {
@@ -57,24 +67,24 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
         if (_.includes(['partial', 'insert'], action)) {
             // first init, refresh ob data.
             _.each(obRows, row => {
-                this.storedObs[pair][String(row.id)] = row;
+                this.storedObs[pair][String(row.id)] = this.bitmexObToInternalOb(row);
                 const newRowRef = this.storedObs[pair][String(row.id)];
                 if (this.storedObsOrdered[pair].length === 0) {
                     this.storedObsOrdered[pair].push(newRowRef);
                 }
-                else if (row.price > _.last(this.storedObsOrdered[pair]).price) {
+                else if (row.price > _.last(this.storedObsOrdered[pair]).r) {
                     this.storedObsOrdered[pair].push(newRowRef);
                 }
-                else if (row.price < _.first(this.storedObsOrdered[pair]).price) {
+                else if (row.price < _.first(this.storedObsOrdered[pair]).r) {
                     this.storedObsOrdered[pair].unshift(newRowRef);
                 }
                 else {
                     for (let i = 0; i < this.storedObsOrdered[pair].length; i++) {
-                        if (row.price === this.storedObsOrdered[pair][i].price) {
+                        if (row.price === this.storedObsOrdered[pair][i].r) {
                             this.storedObsOrdered[pair][i] = newRowRef;
                             break;
                         }
-                        else if (row.price < this.storedObsOrdered[pair][i].price) {
+                        else if (row.price < this.storedObsOrdered[pair][i].r) {
                             this.storedObsOrdered[pair].splice(i, 0, newRowRef);
                             break;
                         }
@@ -100,9 +110,10 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
             _.each(obRows, row => {
                 if (this.storedObs[pair][String(row.id)]) {
                     // must update one by one because update doesn't contain price
-                    this.storedObs[pair][String(row.id)].size = row.size;
-                    if (this.storedObs[pair][String(row.id)].side !== row.side) {
-                        this.storedObs[pair][String(row.id)].side = row.side;
+                    const obRowInternal = this.bitmexObToInternalOb(row);
+                    this.storedObs[pair][String(row.id)].a = obRowInternal.a;
+                    if (this.storedObs[pair][String(row.id)].s !== obRowInternal.s) {
+                        this.storedObs[pair][String(row.id)].s = obRowInternal.s;
                         this.currentSplitIndex = this.storedObs[pair][String(row.id)].idx;
                     }
                 }
@@ -116,7 +127,7 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
         else if (action === 'delete') {
             _.each(obRows, row => {
                 const idx = this.storedObs[pair][String(row.id)].idx;
-                this.storedObsOrdered[pair][idx].size = 0;
+                this.storedObsOrdered[pair][idx].a = 0;
                 delete this.storedObs[pair][String(row.id)];
             });
         }
@@ -128,7 +139,7 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
         const dataRaw = this.storedObs[pair];
         if (!dataRaw)
             return null;
-        if (1) {
+        if (USING_NEW_METHOD) {
             const bidI = this.findBestBid(pair).i;
             const askI = this.findBestAsk(pair).i;
             const asks = [];
@@ -136,19 +147,19 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
             const storedOrdered = this.storedObsOrdered[pair];
             for (let i = bidI; i >= 0 && bids.length < depth; i--) {
                 const item = storedOrdered[i];
-                if (item.size > 0) {
+                if (item.a > 0) {
                     bids.push({
-                        r: item.price,
-                        a: item.size,
+                        r: item.r,
+                        a: item.a,
                     });
                 }
             }
             for (let i = askI; i <= storedOrdered.length && asks.length < depth; i++) {
                 const item = storedOrdered[i];
-                if (item.size > 0) {
+                if (item.a > 0) {
                     asks.push({
-                        r: item.price,
-                        a: item.size,
+                        r: item.r,
+                        a: item.a,
                     });
                 }
             }
@@ -161,8 +172,8 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
         }
         else {
             // old method, slow
-            const bidsUnsortedRaw = _.filter(dataRaw, o => o.side === 'Buy' && o.size > 0);
-            const askUnsortedRaw = _.filter(dataRaw, o => o.side === 'Sell' && o.size > 0);
+            const bidsUnsortedRaw = _.filter(dataRaw, o => o.s === 0 && o.a > 0);
+            const askUnsortedRaw = _.filter(dataRaw, o => o.s === 1 && o.a > 0);
             const bids = _.map(parsingUtils_1.sortByDesc(bidsUnsortedRaw, 'price').slice(0, depth), d => ({
                 r: d.price,
                 a: d.size,
@@ -181,17 +192,17 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
     }
     findBestBid(pair) {
         let i = this.currentSplitIndex;
-        const sideSplit = this.storedObsOrdered[pair][this.currentSplitIndex].side;
-        if (sideSplit === 'Buy') {
+        const sideSplit = this.storedObsOrdered[pair][this.currentSplitIndex].s;
+        if (sideSplit === 0) {
             // go down until we see Sell
-            while (i < this.storedObsOrdered[pair].length && this.storedObsOrdered[pair][i].side === 'Buy') {
+            while (i < this.storedObsOrdered[pair].length && this.storedObsOrdered[pair][i].s === 0) {
                 i++;
             }
             return { i: i - 1, bid: this.storedObsOrdered[pair][i - 1] };
         }
         else {
             // go up until we see first buy
-            while (i > 0 && this.storedObsOrdered[pair][i].side === 'Sell') {
+            while (i > 0 && this.storedObsOrdered[pair][i].s === 1) {
                 i--;
             }
             return { i: i, bid: this.storedObsOrdered[pair][i] };
@@ -199,17 +210,17 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
     }
     findBestAsk(pair) {
         let i = this.currentSplitIndex;
-        const sideSplit = this.storedObsOrdered[pair][this.currentSplitIndex].side;
-        if (sideSplit === 'Buy') {
+        const sideSplit = this.storedObsOrdered[pair][this.currentSplitIndex].s;
+        if (sideSplit === 0) {
             // go down until we see Sell
-            while (i < this.storedObsOrdered[pair].length && this.storedObsOrdered[pair][i].side === 'Buy') {
+            while (i < this.storedObsOrdered[pair].length && this.storedObsOrdered[pair][i].s === 0) {
                 i++;
             }
             return { i: i, ask: this.storedObsOrdered[pair][i] };
         }
         else {
             // go up until we see first buy
-            while (i >= 0 && this.storedObsOrdered[pair][i].side === 'Sell') {
+            while (i >= 0 && this.storedObsOrdered[pair][i].s === 1) {
                 i--;
             }
             return { i: i + 1, ask: this.storedObsOrdered[pair][i + 1] };
