@@ -154,7 +154,7 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
                     });
                 }
             }
-            for (let i = askI; i <= storedOrdered.length && asks.length < depth; i++) {
+            for (let i = askI; i < storedOrdered.length && asks.length < depth; i++) {
                 const item = storedOrdered[i];
                 if (item.a > 0) {
                     asks.push({

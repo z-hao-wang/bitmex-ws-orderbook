@@ -1,0 +1,78 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`bitmex ob keeper works with delete 1`] = `
+Object {
+  "asks": Array [
+    Object {
+      "a": 21,
+      "r": 7001,
+    },
+  ],
+  "bids": Array [
+    Object {
+      "a": 26,
+      "r": 7000.5,
+    },
+    Object {
+      "a": 5,
+      "r": 7000,
+    },
+  ],
+  "pair": "USD_BTC_perpetual_swap",
+  "ts": undefined,
+}
+`;
+
+exports[`bitmex ob keeper works with partial 1`] = `
+Object {
+  "asks": Array [
+    Object {
+      "a": 21,
+      "r": 7001,
+    },
+    Object {
+      "a": 3,
+      "r": 7002,
+    },
+  ],
+  "bids": Array [
+    Object {
+      "a": 26,
+      "r": 7000.5,
+    },
+    Object {
+      "a": 5,
+      "r": 7000,
+    },
+  ],
+  "pair": "USD_BTC_perpetual_swap",
+  "ts": undefined,
+}
+`;
+
+exports[`bitmex ob keeper works with update 1`] = `
+Object {
+  "asks": Array [
+    Object {
+      "a": 23063,
+      "r": 7000.5,
+    },
+    Object {
+      "a": 21,
+      "r": 7001,
+    },
+    Object {
+      "a": 3,
+      "r": 7002,
+    },
+  ],
+  "bids": Array [
+    Object {
+      "a": 5,
+      "r": 7000,
+    },
+  ],
+  "pair": "USD_BTC_perpetual_swap",
+  "ts": undefined,
+}
+`;
