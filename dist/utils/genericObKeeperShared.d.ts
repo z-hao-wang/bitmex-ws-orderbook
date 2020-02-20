@@ -7,7 +7,7 @@ export declare class GenericObKeeperShared {
         bids: OrderBookItem[];
         asks: OrderBookItem[];
     }): void;
-    getOb(): {
+    getOb(depth?: number): {
         asks: OrderBookItem[];
         bids: OrderBookItem[];
     };

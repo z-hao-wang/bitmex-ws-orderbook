@@ -91,8 +91,8 @@ class GenericObKeeperShared {
             }
         }
     }
-    getOb() {
-        return { asks: this.asks, bids: this.bids };
+    getOb(depth) {
+        return { asks: depth ? this.asks.slice(0, 25) : this.asks, bids: depth ? this.bids.slice(0, 25) : this.bids };
     }
 }
 exports.GenericObKeeperShared = GenericObKeeperShared;

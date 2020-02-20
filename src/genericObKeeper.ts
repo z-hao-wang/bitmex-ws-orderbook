@@ -27,7 +27,7 @@ export class GenericObKeeper extends BaseKeeper {
     }
   }
 
-  getOrderBookWs(pair: string): OrderBookSchema {
+  getOrderBookWs(pair: string, depth?: number): OrderBookSchema {
     if (!this.obKeepers[pair]) {
       return {
         ts: new Date(),
@@ -40,7 +40,7 @@ export class GenericObKeeper extends BaseKeeper {
     const orderbooks: OrderBookSchema = {
       ts: new Date(),
       pair,
-      ...this.obKeepers[pair].getOb(),
+      ...this.obKeepers[pair].getOb(depth),
     };
     return orderbooks;
   }

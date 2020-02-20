@@ -30,7 +30,7 @@ class GenericObKeeper extends baseKeeper_1.BaseKeeper {
             this.emit(`orderbook`, this.getOrderBookWs(pair));
         }
     }
-    getOrderBookWs(pair) {
+    getOrderBookWs(pair, depth) {
         if (!this.obKeepers[pair]) {
             return {
                 ts: new Date(),
@@ -39,7 +39,7 @@ class GenericObKeeper extends baseKeeper_1.BaseKeeper {
                 asks: [],
             };
         }
-        const orderbooks = Object.assign({ ts: new Date(), pair }, this.obKeepers[pair].getOb());
+        const orderbooks = Object.assign({ ts: new Date(), pair }, this.obKeepers[pair].getOb(depth));
         return orderbooks;
     }
     // fallback polling not implmented
