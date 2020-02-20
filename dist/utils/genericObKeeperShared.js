@@ -38,6 +38,7 @@ class GenericObKeeperShared {
                         if (bid.a === 0 && bid.r === this.bids[i].r) {
                             // need to delete this entry.
                             this.bids.splice(i, 1);
+                            i--;
                             break;
                         }
                         else if (bid.r === this.bids[i].r) {
