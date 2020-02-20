@@ -135,7 +135,7 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
     getOrderBookRaw(pair) {
         return this.storedObs[pair];
     }
-    getOrderBookWs(pair, depth = 5) {
+    getOrderBookWs(pair, depth = 25) {
         const dataRaw = this.storedObs[pair];
         if (!dataRaw)
             return null;

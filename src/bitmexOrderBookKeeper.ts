@@ -144,7 +144,7 @@ export class BitmexOrderBookKeeper extends BaseKeeper {
     return this.storedObs[pair];
   }
 
-  getOrderBookWs(pair: string, depth: number = 5): OrderBookSchema | null {
+  getOrderBookWs(pair: string, depth: number = 25): OrderBookSchema | null {
     const dataRaw = this.storedObs[pair];
     if (!dataRaw) return null;
     if (USING_NEW_METHOD) {
