@@ -46,7 +46,7 @@ class GenericObKeeperShared {
                             break;
                         }
                         else if (bid.r > this.bids[i].r) {
-                            this.bids.splice(i, 0, bid);
+                            bid.a > 0 && this.bids.splice(i, 0, bid);
                             break;
                         }
                     }
@@ -93,7 +93,7 @@ class GenericObKeeperShared {
         }
     }
     getOb(depth) {
-        return { asks: depth ? this.asks.slice(0, 25) : this.asks, bids: depth ? this.bids.slice(0, 25) : this.bids };
+        return { asks: depth ? this.asks.slice(0, depth) : this.asks, bids: depth ? this.bids.slice(0, depth) : this.bids };
     }
 }
 exports.GenericObKeeperShared = GenericObKeeperShared;

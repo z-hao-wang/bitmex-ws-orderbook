@@ -39,7 +39,7 @@ export class GenericObKeeperShared {
               this.bids[i] = bid;
               break;
             } else if (bid.r > this.bids[i].r) {
-              this.bids.splice(i, 0, bid);
+              bid.a > 0 && this.bids.splice(i, 0, bid);
               break;
             }
           }
@@ -72,7 +72,7 @@ export class GenericObKeeperShared {
               this.asks[i] = ask;
               break;
             } else if (ask.r < this.asks[i].r) {
-              this.asks.splice(i, 0, ask);
+              ask.a > 0 && this.asks.splice(i, 0, ask);
               break;
             }
           }
@@ -82,6 +82,6 @@ export class GenericObKeeperShared {
   }
 
   getOb(depth?: number) {
-    return { asks: depth ? this.asks.slice(0, 25) : this.asks, bids: depth ? this.bids.slice(0, 25) : this.bids };
+    return { asks: depth ? this.asks.slice(0, depth) : this.asks, bids: depth ? this.bids.slice(0, depth) : this.bids };
   }
 }
