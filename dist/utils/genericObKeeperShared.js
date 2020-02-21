@@ -84,7 +84,7 @@ class GenericObKeeperShared {
                             break;
                         }
                         else if (ask.r < this.asks[i].r) {
-                            this.asks.splice(i, 0, ask);
+                            ask.a > 0 && this.asks.splice(i, 0, ask);
                             break;
                         }
                     }

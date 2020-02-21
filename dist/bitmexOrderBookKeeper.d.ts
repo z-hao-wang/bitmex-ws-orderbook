@@ -28,6 +28,7 @@ export declare class BitmexOrderBookKeeper extends BaseKeeper {
     onSocketMessage(msg: any): void;
     onReceiveOb(obRows: BitmexOb.OrderBookItem[], action: string, pair: string): void;
     getOrderBookRaw(pair: string): Record<string, BitmexOrderBookKeeper.InternalOb>;
+    getOrderBookWsOld(pair: string, depth?: number): OrderBookSchema | null;
     getOrderBookWs(pair: string, depth?: number): OrderBookSchema | null;
     protected findBestBid(pair: string): {
         i: number;

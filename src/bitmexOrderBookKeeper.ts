@@ -38,7 +38,6 @@ export class BitmexOrderBookKeeper extends BaseKeeper {
     super(options);
     this.testnet = options.testnet || false;
     this.bitmexRequest = new BitmexRequest({ testnet: this.testnet });
-
     this.initLogger();
   }
 
@@ -144,6 +143,28 @@ export class BitmexOrderBookKeeper extends BaseKeeper {
     return this.storedObs[pair];
   }
 
+  getOrderBookWsOld(pair: string, depth: number = 25): OrderBookSchema | null {
+    const dataRaw = this.storedObs[pair];
+    if (!dataRaw) return null;
+    // old method, slow
+    const bidsUnsortedRaw = _.filter(dataRaw, o => o.s === 0 && o.a > 0);
+    const askUnsortedRaw = _.filter(dataRaw, o => o.s === 1 && o.a > 0);
+    const bids: OrderBookItem[] = _.map(sortByDesc(bidsUnsortedRaw, 'price').slice(0, depth), d => ({
+      r: d.price,
+      a: d.size,
+    }));
+    const asks: OrderBookItem[] = _.map(sortByAsc(askUnsortedRaw, 'price').slice(0, depth), d => ({
+      r: d.price,
+      a: d.size,
+    }));
+
+    return {
+      pair,
+      ts: this.lastObWsTime!,
+      bids,
+      asks,
+    };
+  }
   getOrderBookWs(pair: string, depth: number = 25): OrderBookSchema | null {
     const dataRaw = this.storedObs[pair];
     if (!dataRaw) return null;
@@ -179,23 +200,7 @@ export class BitmexOrderBookKeeper extends BaseKeeper {
       };
     } else {
       // old method, slow
-      const bidsUnsortedRaw = _.filter(dataRaw, o => o.s === 0 && o.a > 0);
-      const askUnsortedRaw = _.filter(dataRaw, o => o.s === 1 && o.a > 0);
-      const bids: OrderBookItem[] = _.map(sortByDesc(bidsUnsortedRaw, 'price').slice(0, depth), d => ({
-        r: d.price,
-        a: d.size,
-      }));
-      const asks: OrderBookItem[] = _.map(sortByAsc(askUnsortedRaw, 'price').slice(0, depth), d => ({
-        r: d.price,
-        a: d.size,
-      }));
-
-      return {
-        pair,
-        ts: this.lastObWsTime!,
-        bids,
-        asks,
-      };
+      return this.getOrderBookWsOld(pair, depth);
     }
   }
 
