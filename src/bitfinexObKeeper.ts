@@ -41,6 +41,11 @@ export class BitfinexObKeeper extends BaseKeeper {
         this.emit(`error`, errMsg);
         throw new Error(errMsg);
       }
+      if (!_.isNumber(_data[0])) {
+        const errMsg = `invalid bitfinex ob keeper data, ${pair} data=${JSON.stringify(_data)}`;
+        this.emit(`error`, errMsg);
+        throw new Error(errMsg);
+      }
       // update ob in matching price
       const cache = this.obCache[pair];
       // this is not very efficient, but it can get things done
