@@ -18,11 +18,22 @@ class BitfinexObKeeper extends baseKeeper_1.BaseKeeper {
     }
     // if initial, return true
     onReceiveOb(pair, _data) {
-        if (!this.obCache[pair]) {
+        const isInitial = _.isArray(_data) && _.isArray(_data[0]) && _.isNumber(_data[0][0]);
+        if (isInitial) {
             this.obCache[pair] = _data.slice(0);
             return true;
         }
         else {
+            if (!this.obCache[pair]) {
+                const errMsg = `invalid bitfinex ob keeper status, ${pair} has no cache`;
+                this.emit(`error`, errMsg);
+                throw new Error(errMsg);
+            }
+            if (!_.isNumber(_data[0])) {
+                const errMsg = `invalid bitfinex ob keeper data, ${pair} data=${JSON.stringify(_data)}`;
+                this.emit(`error`, errMsg);
+                throw new Error(errMsg);
+            }
             // update ob in matching price
             const cache = this.obCache[pair];
             // this is not very efficient, but it can get things done
