@@ -12,6 +12,7 @@ const USING_NEW_METHOD = true;
 export namespace BitmexOrderBookKeeper {
   export interface Options extends BaseKeeper.Options {
     testnet?: boolean;
+    verifyWithOldMethod?: boolean;
   }
 
   export interface InternalOb {
@@ -29,6 +30,7 @@ export class BitmexOrderBookKeeper extends BaseKeeper {
   protected bitmexRequest: BitmexRequest;
   protected storedObsOrdered: Record<string, BitmexOrderBookKeeper.InternalOb[]> = {};
   protected currentSplitIndex = 0;
+  protected verifyWithOldMethod = false;
   name = 'bitmexObKeeper';
 
   VERIFY_OB_PERCENT = 0;
@@ -39,6 +41,7 @@ export class BitmexOrderBookKeeper extends BaseKeeper {
     this.testnet = options.testnet || false;
     this.bitmexRequest = new BitmexRequest({ testnet: this.testnet });
     this.initLogger();
+    this.verifyWithOldMethod = options.verifyWithOldMethod || false;
   }
 
   protected bitmexObToInternalOb(ob: BitmexOb.OBRow): BitmexOrderBookKeeper.InternalOb {
@@ -149,13 +152,13 @@ export class BitmexOrderBookKeeper extends BaseKeeper {
     // old method, slow
     const bidsUnsortedRaw = _.filter(dataRaw, o => o.s === 0 && o.a > 0);
     const askUnsortedRaw = _.filter(dataRaw, o => o.s === 1 && o.a > 0);
-    const bids: OrderBookItem[] = _.map(sortByDesc(bidsUnsortedRaw, 'price').slice(0, depth), d => ({
-      r: d.price,
-      a: d.size,
+    const bids: OrderBookItem[] = _.map(sortByDesc(bidsUnsortedRaw, 'r').slice(0, depth), d => ({
+      r: d.r,
+      a: d.a,
     }));
-    const asks: OrderBookItem[] = _.map(sortByAsc(askUnsortedRaw, 'price').slice(0, depth), d => ({
-      r: d.price,
-      a: d.size,
+    const asks: OrderBookItem[] = _.map(sortByAsc(askUnsortedRaw, 'r').slice(0, depth), d => ({
+      r: d.r,
+      a: d.a,
     }));
 
     return {
@@ -165,6 +168,7 @@ export class BitmexOrderBookKeeper extends BaseKeeper {
       asks,
     };
   }
+
   getOrderBookWs(pair: string, depth: number = 25): OrderBookSchema | null {
     const dataRaw = this.storedObs[pair];
     if (!dataRaw) return null;
@@ -190,6 +194,15 @@ export class BitmexOrderBookKeeper extends BaseKeeper {
             r: item.r,
             a: item.a,
           });
+        }
+      }
+      if (this.verifyWithOldMethod) {
+        const oldOb = this.getOrderBookWsOld(pair, depth)!;
+        if (oldOb.asks[0].r !== asks[0].r) {
+          console.error(`unmatching ob asks`, oldOb.asks, asks);
+        }
+        if (oldOb.bids[0].r !== bids[0].r) {
+          console.error(`unmatching ob bids`, oldOb.bids, bids);
         }
       }
       return {

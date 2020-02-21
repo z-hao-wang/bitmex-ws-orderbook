@@ -22,12 +22,14 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
         this.storedObs = {};
         this.storedObsOrdered = {};
         this.currentSplitIndex = 0;
+        this.verifyWithOldMethod = false;
         this.name = 'bitmexObKeeper';
         this.VERIFY_OB_PERCENT = 0;
         this.VALID_OB_WS_GAP = 20 * 1000;
         this.testnet = options.testnet || false;
         this.bitmexRequest = new bitmex_request_1.BitmexRequest({ testnet: this.testnet });
         this.initLogger();
+        this.verifyWithOldMethod = options.verifyWithOldMethod || false;
     }
     bitmexObToInternalOb(ob) {
         return {
@@ -142,13 +144,13 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
         // old method, slow
         const bidsUnsortedRaw = _.filter(dataRaw, o => o.s === 0 && o.a > 0);
         const askUnsortedRaw = _.filter(dataRaw, o => o.s === 1 && o.a > 0);
-        const bids = _.map(parsingUtils_1.sortByDesc(bidsUnsortedRaw, 'price').slice(0, depth), d => ({
-            r: d.price,
-            a: d.size,
+        const bids = _.map(parsingUtils_1.sortByDesc(bidsUnsortedRaw, 'r').slice(0, depth), d => ({
+            r: d.r,
+            a: d.a,
         }));
-        const asks = _.map(parsingUtils_1.sortByAsc(askUnsortedRaw, 'price').slice(0, depth), d => ({
-            r: d.price,
-            a: d.size,
+        const asks = _.map(parsingUtils_1.sortByAsc(askUnsortedRaw, 'r').slice(0, depth), d => ({
+            r: d.r,
+            a: d.a,
         }));
         return {
             pair,
@@ -183,6 +185,15 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
                         r: item.r,
                         a: item.a,
                     });
+                }
+            }
+            if (this.verifyWithOldMethod) {
+                const oldOb = this.getOrderBookWsOld(pair, depth);
+                if (oldOb.asks[0].r !== asks[0].r) {
+                    console.error(`unmatching ob asks`, oldOb.asks, asks);
+                }
+                if (oldOb.bids[0].r !== bids[0].r) {
+                    console.error(`unmatching ob bids`, oldOb.bids, bids);
                 }
             }
             return {

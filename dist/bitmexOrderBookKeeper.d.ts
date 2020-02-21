@@ -5,6 +5,7 @@ import { BaseKeeper } from './baseKeeper';
 export declare namespace BitmexOrderBookKeeper {
     interface Options extends BaseKeeper.Options {
         testnet?: boolean;
+        verifyWithOldMethod?: boolean;
     }
     interface InternalOb {
         s: 0 | 1;
@@ -20,6 +21,7 @@ export declare class BitmexOrderBookKeeper extends BaseKeeper {
     protected bitmexRequest: BitmexRequest;
     protected storedObsOrdered: Record<string, BitmexOrderBookKeeper.InternalOb[]>;
     protected currentSplitIndex: number;
+    protected verifyWithOldMethod: boolean;
     name: string;
     VERIFY_OB_PERCENT: number;
     VALID_OB_WS_GAP: number;
