@@ -1,10 +1,11 @@
 import * as _ from 'lodash';
 import { BitmexRequest } from 'bitmex-request';
 import * as traderUtils from './utils/traderUtils';
-import { sortByAsc, sortByDesc, sortOrderBooks, verifyObPollVsObWs } from './utils/parsingUtils';
+import { sortByAsc, sortByDesc, verifyObPollVsObWs } from './utils/parsingUtils';
 import { BitmexOb } from './types/bitmex.type';
 import { OrderBookItem, OrderBookSchema } from 'bitmex-request';
 import { BaseKeeper } from './baseKeeper';
+import { sortedFindIndex } from './utils/searchUtils';
 
 // new method is much much faster than old one
 const USING_NEW_METHOD = true;
@@ -92,17 +93,21 @@ export class BitmexOrderBookKeeper extends BaseKeeper {
         } else if (row.price < _.first(this.storedObsOrdered[pair])!.r) {
           this.storedObsOrdered[pair].unshift(newRowRef);
         } else {
-          for (let i = 0; i < this.storedObsOrdered[pair].length; i++) {
-            if (row.price === this.storedObsOrdered[pair][i].r) {
-              this.storedObsOrdered[pair][i] = newRowRef;
-              break;
-            } else if (row.price < this.storedObsOrdered[pair][i].r) {
-              this.storedObsOrdered[pair].splice(i, 0, newRowRef);
-              break;
+          // try to find the price using binary search first. slightly faster.
+          const foundIndex = sortedFindIndex(this.storedObsOrdered[pair], row.price, x => x.r);
+          if (foundIndex !== -1) {
+            this.storedObsOrdered[pair][foundIndex] = newRowRef;
+          } else {
+            // if not found, insert with new price.
+            for (let i = 0; i < this.storedObsOrdered[pair].length; i++) {
+              if (row.price < this.storedObsOrdered[pair][i].r) {
+                this.storedObsOrdered[pair].splice(i, 0, newRowRef);
+                break;
+              }
             }
           }
         }
-        // ensure the data is ordered
+        // ensure the data is ordered (DEBUG only)
         // for (let i = 0; i < this.storedObsOrdered[pair].length; i++) {
         //   if (i > 0 && this.storedObsOrdered[pair][i].price < this.storedObsOrdered[pair][i - 1].price) {
         //     console.error(`invalid order, `, this.storedObsOrdered[pair])
