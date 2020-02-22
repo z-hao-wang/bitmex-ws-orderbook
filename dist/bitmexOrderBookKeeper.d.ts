@@ -20,7 +20,7 @@ export declare class BitmexOrderBookKeeper extends BaseKeeper {
     protected testnet: boolean;
     protected bitmexRequest: BitmexRequest;
     protected storedObsOrdered: Record<string, BitmexOrderBookKeeper.InternalOb[]>;
-    protected currentSplitIndex: number;
+    protected currentSplitIndex: Record<string, number>;
     protected verifyWithOldMethod: boolean;
     name: string;
     VERIFY_OB_PERCENT: number;
@@ -29,6 +29,7 @@ export declare class BitmexOrderBookKeeper extends BaseKeeper {
     protected bitmexObToInternalOb(ob: BitmexOb.OBRow): BitmexOrderBookKeeper.InternalOb;
     onSocketMessage(msg: any): void;
     onReceiveOb(obRows: BitmexOb.OrderBookItem[], action: string, pair: string): void;
+    getSplitIndex(pair: string): number;
     getOrderBookRaw(pair: string): Record<string, BitmexOrderBookKeeper.InternalOb>;
     getOrderBookWsOld(pair: string, depth?: number): OrderBookSchema | null;
     getOrderBookWs(pair: string, depth?: number): OrderBookSchema | null;

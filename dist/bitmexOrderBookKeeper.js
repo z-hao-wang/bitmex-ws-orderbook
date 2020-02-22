@@ -21,7 +21,7 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
         super(options);
         this.storedObs = {};
         this.storedObsOrdered = {};
-        this.currentSplitIndex = 0;
+        this.currentSplitIndex = {};
         this.verifyWithOldMethod = false;
         this.name = 'bitmexObKeeper';
         this.VERIFY_OB_PERCENT = 0;
@@ -116,7 +116,7 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
                     this.storedObs[pair][String(row.id)].a = obRowInternal.a;
                     if (this.storedObs[pair][String(row.id)].s !== obRowInternal.s) {
                         this.storedObs[pair][String(row.id)].s = obRowInternal.s;
-                        this.currentSplitIndex = this.storedObs[pair][String(row.id)].idx;
+                        this.currentSplitIndex[pair] = this.storedObs[pair][String(row.id)].idx;
                     }
                 }
                 else {
@@ -133,6 +133,12 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
                 delete this.storedObs[pair][String(row.id)];
             });
         }
+    }
+    getSplitIndex(pair) {
+        if (!this.currentSplitIndex[pair]) {
+            return Math.floor(this.storedObsOrdered[pair].length / 2);
+        }
+        return this.currentSplitIndex[pair];
     }
     getOrderBookRaw(pair) {
         return this.storedObs[pair];
@@ -190,7 +196,7 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
             if (this.verifyWithOldMethod) {
                 const oldOb = this.getOrderBookWsOld(pair, depth);
                 if (oldOb.asks[0].r !== asks[0].r) {
-                    console.error(`unmatching ob asks`, oldOb.asks, asks);
+                    console.error(`unmatching ob asks`, oldOb.asks, storedOrdered);
                 }
                 if (oldOb.bids[0].r !== bids[0].r) {
                     console.error(`unmatching ob bids`, oldOb.bids, bids);
@@ -209,36 +215,38 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
         }
     }
     findBestBid(pair) {
-        let i = this.currentSplitIndex;
-        const sideSplit = this.storedObsOrdered[pair][this.currentSplitIndex].s;
+        const splitIndex = this.getSplitIndex(pair);
+        let i = splitIndex;
+        const sideSplit = this.storedObsOrdered[pair][splitIndex].s;
         if (sideSplit === 0) {
             // go down until we see Sell
-            while (i < this.storedObsOrdered[pair].length && this.storedObsOrdered[pair][i].s === 0) {
+            while (i < this.storedObsOrdered[pair].length && (this.storedObsOrdered[pair][i].s === 0 || this.storedObsOrdered[pair][i].a === 0)) {
                 i++;
             }
             return { i: i - 1, bid: this.storedObsOrdered[pair][i - 1] };
         }
         else {
             // go up until we see first buy
-            while (i > 0 && this.storedObsOrdered[pair][i].s === 1) {
+            while (i > 0 && (this.storedObsOrdered[pair][i].s === 1 || this.storedObsOrdered[pair][i].a === 0)) {
                 i--;
             }
             return { i: i, bid: this.storedObsOrdered[pair][i] };
         }
     }
     findBestAsk(pair) {
-        let i = this.currentSplitIndex;
-        const sideSplit = this.storedObsOrdered[pair][this.currentSplitIndex].s;
+        const splitIndex = this.getSplitIndex(pair);
+        let i = splitIndex;
+        const sideSplit = this.storedObsOrdered[pair][splitIndex].s;
         if (sideSplit === 0) {
             // go down until we see Sell
-            while (i < this.storedObsOrdered[pair].length && this.storedObsOrdered[pair][i].s === 0) {
+            while (i < this.storedObsOrdered[pair].length && (this.storedObsOrdered[pair][i].s === 0 || this.storedObsOrdered[pair][i].a === 0)) {
                 i++;
             }
             return { i: i, ask: this.storedObsOrdered[pair][i] };
         }
         else {
             // go up until we see first buy
-            while (i >= 0 && this.storedObsOrdered[pair][i].s === 1) {
+            while (i >= 0 && (this.storedObsOrdered[pair][i].s === 1 || this.storedObsOrdered[pair][i].a === 0)) {
                 i--;
             }
             return { i: i + 1, ask: this.storedObsOrdered[pair][i + 1] };
