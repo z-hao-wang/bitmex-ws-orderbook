@@ -79,7 +79,7 @@ export class BitmexOrderBookKeeper extends BaseKeeper {
 
   // directly use this for process backtesting data.
   onReceiveOb(obRows: BitmexOb.OrderBookItem[], action: string, pair: string) {
-    if (partial === 'partial') {
+    if (action === 'partial') {
       // this means the websocket is probably reinitialized. we need to reconstruct the whole orderbook
       this.storedObs[pair] = {};
       this.storedObsOrdered[pair] = [];
