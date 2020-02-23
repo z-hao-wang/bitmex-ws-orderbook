@@ -11,11 +11,35 @@ export class GenericObKeeperShared {
   // if initial, return true
   onReceiveOb(params: { bids: OrderBookItem[]; asks: OrderBookItem[] }) {
     // bids ordered from best to worst, from highest to lowest.
+    if (params.bids.length > 1 && params.bids[0].r < params.bids[1].r) {
+      // this means initial order is reversed.
+      params.bids.reverse();
+    }
+    if (params.asks.length > 1 && params.asks[0].r > params.asks[1].r) {
+      // this means initial order is reversed.
+      params.asks.reverse();
+    }
+
+    // deal with special cases, the bid cannot be greater than ask.
+    if (params.asks.length > 0) {
+      while (this.bids.length > 0 && this.bids[0].r > params.asks[0].r) {
+        this.bids.splice(0, 1);
+      }
+    }
+
+    if (params.bids.length > 0) {
+      while (this.asks.length > 0 && this.asks[0].r < params.bids[0].r) {
+        this.asks.splice(0, 1);
+      }
+    }
+
     for (let bid of params.bids) {
+      let iterateStartIndex = 0;
       if (!bid || !bid.r) {
         console.error(`invalid bid`, bid);
         continue;
       }
+
       if (this.bids.length === 0) {
         // insert if empty
         this.bids.push(bid);
@@ -26,27 +50,31 @@ export class GenericObKeeperShared {
         } else if (bid.r > _.first(this.bids)!.r) {
           bid.a > 0 && this.bids.unshift(bid);
         } else {
-          for (let i = 0; i < this.bids.length; i++) {
+          for (let i = iterateStartIndex; i < this.bids.length; i++) {
             if (!this.bids[i]) {
               console.error(`invalid condition this.bids`, this.bids);
             }
             if (bid.a === 0 && bid.r === this.bids[i].r) {
               // need to delete this entry.
+              iterateStartIndex = i - 1;
               this.bids.splice(i, 1);
-              i--;
               break;
             } else if (bid.r === this.bids[i].r) {
               this.bids[i] = bid;
+              iterateStartIndex = i;
               break;
             } else if (bid.r > this.bids[i].r) {
               bid.a > 0 && this.bids.splice(i, 0, bid);
+              iterateStartIndex = i;
               break;
             }
           }
         }
       }
     }
+
     for (let ask of params.asks) {
+      let iterateStartIndex = 0;
       if (!ask || !ask.r) {
         console.error(`invalid ask`, ask);
         continue;
@@ -60,19 +88,22 @@ export class GenericObKeeperShared {
         } else if (ask.r < _.first(this.asks)!.r) {
           ask.a > 0 && this.asks.unshift(ask);
         } else {
-          for (let i = 0; i < this.asks.length; i++) {
+          for (let i = iterateStartIndex; i < this.asks.length; i++) {
             if (!this.asks[i]) {
               console.error(`invalid condition this.asks`, this.asks);
             }
             if (ask.a === 0 && ask.r === this.asks[i].r) {
               // need to delete this entry.
               this.asks.splice(i, 1);
+              iterateStartIndex = i - 1;
               break;
             } else if (ask.r == this.asks[i].r) {
               this.asks[i] = ask;
+              iterateStartIndex = 1;
               break;
             } else if (ask.r < this.asks[i].r) {
               ask.a > 0 && this.asks.splice(i, 0, ask);
+              iterateStartIndex = i;
               break;
             }
           }

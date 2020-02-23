@@ -1,0 +1,83 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`GenericObKeeperShared works with new 1`] = `
+Object {
+  "asks": Array [
+    Object {
+      "a": 3,
+      "r": 7002.5,
+    },
+    Object {
+      "a": 21,
+      "r": 7009,
+    },
+    Object {
+      "a": 26,
+      "r": 7010.5,
+    },
+    Object {
+      "a": 5,
+      "r": 7011,
+    },
+  ],
+  "bids": Array [
+    Object {
+      "a": 3,
+      "r": 7002,
+    },
+    Object {
+      "a": 21,
+      "r": 7001,
+    },
+    Object {
+      "a": 26,
+      "r": 7000.5,
+    },
+    Object {
+      "a": 5,
+      "r": 7000,
+    },
+  ],
+}
+`;
+
+exports[`GenericObKeeperShared works with reversed 1`] = `
+Object {
+  "asks": Array [
+    Object {
+      "a": 3,
+      "r": 7002.5,
+    },
+    Object {
+      "a": 21,
+      "r": 7009,
+    },
+    Object {
+      "a": 26,
+      "r": 7010.5,
+    },
+    Object {
+      "a": 5,
+      "r": 7011,
+    },
+  ],
+  "bids": Array [
+    Object {
+      "a": 3,
+      "r": 7002,
+    },
+    Object {
+      "a": 21,
+      "r": 7001,
+    },
+    Object {
+      "a": 26,
+      "r": 7000.5,
+    },
+    Object {
+      "a": 5,
+      "r": 7000,
+    },
+  ],
+}
+`;
