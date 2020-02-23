@@ -79,6 +79,11 @@ export class BitmexOrderBookKeeper extends BaseKeeper {
 
   // directly use this for process backtesting data.
   onReceiveOb(obRows: BitmexOb.OrderBookItem[], action: string, pair: string) {
+    if (partial === 'partial') {
+      // this means the websocket is probably reinitialized. we need to reconstruct the whole orderbook
+      this.storedObs[pair] = {};
+      this.storedObsOrdered[pair] = [];
+    }
     this.storedObs[pair] = this.storedObs[pair] || {};
     this.storedObsOrdered[pair] = this.storedObsOrdered[pair] || [];
     if (_.includes(['partial', 'insert'], action)) {
@@ -94,7 +99,8 @@ export class BitmexOrderBookKeeper extends BaseKeeper {
           this.storedObsOrdered[pair].unshift(newRowRef);
         } else {
           // try to find the price using binary search first. slightly faster.
-          const foundIndex = sortedFindIndex(this.storedObsOrdered[pair], row.price, x => x.r);
+          const foundIndex =
+            action === 'insert' ? sortedFindIndex(this.storedObsOrdered[pair], row.price, x => x.r) : -1;
           if (foundIndex !== -1) {
             this.storedObsOrdered[pair][foundIndex] = newRowRef;
           } else {
