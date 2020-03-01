@@ -45,6 +45,9 @@ export class BybitOrderBookKeeper extends BaseKeeper {
   }
 
   onReceiveOb(obs: BybitOb.OrderBooks, _pair?: string) {
+    if (_pair) {
+      this.storedObs[_pair] = this.storedObs[_pair] || {};
+    }
     if (_.includes(['snapshot'], obs.type)) {
       // first init, refresh ob data.
       const obRows = (obs as BybitOb.OrderBooksNew).data;
@@ -78,7 +81,7 @@ export class BybitOrderBookKeeper extends BaseKeeper {
     }
   }
 
-  getOrderBookWs(pair: string): OrderBookSchema | null {
+  getOrderBookWs(pair: string, depth: number = 25): OrderBookSchema | null {
     const dataRaw = this.storedObs[pair];
     if (!dataRaw) return null;
     const bidsUnsortedRaw = _.filter(dataRaw, o => o.side === 'Buy' && o.size > 0);

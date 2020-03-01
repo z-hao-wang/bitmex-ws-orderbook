@@ -41,6 +41,9 @@ class BybitOrderBookKeeper extends baseKeeper_1.BaseKeeper {
         }
     }
     onReceiveOb(obs, _pair) {
+        if (_pair) {
+            this.storedObs[_pair] = this.storedObs[_pair] || {};
+        }
         if (_.includes(['snapshot'], obs.type)) {
             // first init, refresh ob data.
             const obRows = obs.data;
@@ -73,7 +76,7 @@ class BybitOrderBookKeeper extends baseKeeper_1.BaseKeeper {
             this.emit(`orderbook`, this.getOrderBookWs(obs.topic.match(/orderBookL2_25\.(.*)/)[1]));
         }
     }
-    getOrderBookWs(pair) {
+    getOrderBookWs(pair, depth = 25) {
         const dataRaw = this.storedObs[pair];
         if (!dataRaw)
             return null;

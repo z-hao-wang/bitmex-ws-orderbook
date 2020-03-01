@@ -17,7 +17,7 @@ export declare class BybitOrderBookKeeper extends BaseKeeper {
     constructor(options: BybitOrderBookKeeper.Options);
     onSocketMessage(msg: any): void;
     onReceiveOb(obs: BybitOb.OrderBooks, _pair?: string): void;
-    getOrderBookWs(pair: string): OrderBookSchema | null;
+    getOrderBookWs(pair: string, depth?: number): OrderBookSchema | null;
     pollOrderBook(pairEx: string): Promise<OrderBookSchema>;
     getOrderBook(pairEx: string, forcePoll?: boolean): Promise<OrderBookSchema>;
 }
