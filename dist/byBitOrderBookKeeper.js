@@ -33,35 +33,39 @@ class BybitOrderBookKeeper extends baseKeeper_1.BaseKeeper {
             const pair = pairMatch && pairMatch[1];
             if (pair) {
                 this.storedObs[pair] = this.storedObs[pair] || {};
-                this._saveWsObData(res);
+                this.onReceiveOb(res);
             }
         }
         catch (e) {
             this.logger.error('onSocketMessage', e);
         }
     }
-    _saveWsObData(obs) {
+    onReceiveOb(obs, _pair) {
         if (_.includes(['snapshot'], obs.type)) {
             // first init, refresh ob data.
             const obRows = obs.data;
             _.each(obRows, row => {
-                this.storedObs[row.symbol][String(row.id)] = row;
+                const pair = _pair || row.symbol;
+                this.storedObs[pair][String(row.id)] = row;
             });
         }
         else if (obs.type === 'delta') {
             // if this order exists, we update it, otherwise don't worry
             _.each(obs.data.update, row => {
-                if (this.storedObs[row.symbol][String(row.id)]) {
+                const pair = _pair || row.symbol;
+                if (this.storedObs[pair][String(row.id)]) {
                     // must update one by one because update doesn't contain price
-                    this.storedObs[row.symbol][String(row.id)].size = row.size;
-                    this.storedObs[row.symbol][String(row.id)].side = row.side;
+                    this.storedObs[pair][String(row.id)].size = row.size;
+                    this.storedObs[pair][String(row.id)].side = row.side;
                 }
             });
             _.each(obs.data.insert, row => {
-                this.storedObs[row.symbol][String(row.id)] = row;
+                const pair = _pair || row.symbol;
+                this.storedObs[pair][String(row.id)] = row;
             });
             _.each(obs.data.delete, row => {
-                delete this.storedObs[row.symbol][String(row.id)];
+                const pair = _pair || row.symbol;
+                delete this.storedObs[pair][String(row.id)];
             });
         }
         this.lastObWsTime = new Date();

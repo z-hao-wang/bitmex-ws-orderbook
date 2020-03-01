@@ -16,7 +16,7 @@ export declare class BybitOrderBookKeeper extends BaseKeeper {
     VALID_OB_WS_GAP: number;
     constructor(options: BybitOrderBookKeeper.Options);
     onSocketMessage(msg: any): void;
-    protected _saveWsObData(obs: BybitOb.OrderBooks): void;
+    onReceiveOb(obs: BybitOb.OrderBooks, _pair?: string): void;
     getOrderBookWs(pair: string): OrderBookSchema | null;
     pollOrderBook(pairEx: string): Promise<OrderBookSchema>;
     getOrderBook(pairEx: string, forcePoll?: boolean): Promise<OrderBookSchema>;
