@@ -19,6 +19,7 @@ class BaseKeeper extends EventEmitter {
         // once per 2 seconds
         this.pollingRateLimiter = new el_logger_1.RateLimit(1, 2);
         this.enableEvent = options.enableEvent || false;
+        this.silentMode = options.silentMode || false;
         this.logger = new el_logger_1.Logger({ name: this.name });
     }
     initLogger() {

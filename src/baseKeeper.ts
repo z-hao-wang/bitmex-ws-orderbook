@@ -5,6 +5,7 @@ import { OrderBookSchema } from 'bitmex-request';
 export namespace BaseKeeper {
   export interface Options {
     enableEvent?: boolean;
+    silentMode?: boolean;
   }
 }
 export class BaseKeeper extends EventEmitter {
@@ -13,10 +14,12 @@ export class BaseKeeper extends EventEmitter {
   name = 'default'; // override this
   cachedPollOrderBook: Record<string, OrderBookSchema> = {};
   protected enableEvent: boolean;
+  protected silentMode: boolean;
 
   constructor(options: BaseKeeper.Options) {
     super();
     this.enableEvent = options.enableEvent || false;
+    this.silentMode = options.silentMode || false;
     this.logger = new Logger({ name: this.name });
   }
 

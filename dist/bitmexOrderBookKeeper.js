@@ -131,7 +131,9 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
                 }
                 else {
                     const errMsg = `${this.name} update ${row.id} does not exist in currentObMap`;
-                    this.logger.error(errMsg);
+                    if (!this.silentMode) {
+                        this.logger.error(errMsg);
+                    }
                     this.emit(`error`, errMsg);
                 }
             });

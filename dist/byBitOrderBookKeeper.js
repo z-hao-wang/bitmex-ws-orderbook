@@ -41,6 +41,7 @@ class BybitOrderBookKeeper extends baseKeeper_1.BaseKeeper {
         }
     }
     onReceiveOb(obs, _pair) {
+        // for rebuilding orderbook process.
         if (_pair) {
             this.storedObs[_pair] = this.storedObs[_pair] || {};
         }
