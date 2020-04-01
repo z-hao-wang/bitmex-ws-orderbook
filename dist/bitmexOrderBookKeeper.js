@@ -231,6 +231,10 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
     findBestBid(pair) {
         const splitIndex = this.getSplitIndex(pair);
         let i = splitIndex;
+        if (!this.storedObsOrdered[pair][splitIndex]) {
+            this.logger.error(`invalid splitIndex=${splitIndex}`);
+            throw new Error(`invalid splitIndex=${splitIndex}`);
+        }
         const sideSplit = this.storedObsOrdered[pair][splitIndex].s;
         if (sideSplit === 0) {
             // go down until we see Sell
