@@ -148,9 +148,11 @@ export class BitmexOrderBookKeeper extends BaseKeeper {
       });
     } else if (action === 'delete') {
       _.each(obRows, row => {
-        const idx = this.storedObs[pair][String(row.id)].idx!;
-        this.storedObsOrdered[pair][idx].a = 0;
-        delete this.storedObs[pair][String(row.id)];
+        if (this.storedObs[pair][String(row.id)]) {
+          const idx = this.storedObs[pair][String(row.id)].idx!;
+          this.storedObsOrdered[pair][idx].a = 0;
+          delete this.storedObs[pair][String(row.id)];
+        }
       });
     }
   }
