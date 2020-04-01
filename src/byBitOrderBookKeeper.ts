@@ -93,8 +93,8 @@ export class BybitOrderBookKeeper extends BaseKeeper {
     return sortOrderBooks({
       pair,
       ts: this.lastObWsTime!,
-      bids: bidsUnsorted,
-      asks: asksUnsorted,
+      bids: bidsUnsorted.slice(0, depth),
+      asks: asksUnsorted.slice(0, depth),
     });
   }
 
