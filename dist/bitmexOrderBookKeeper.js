@@ -134,7 +134,9 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
                     if (!this.silentMode) {
                         this.logger.error(errMsg);
                     }
-                    this.emit(`error`, errMsg);
+                    if (this.enableEvent) {
+                        this.emit(`error`, errMsg);
+                    }
                 }
             });
         }
