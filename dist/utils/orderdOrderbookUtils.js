@@ -3,10 +3,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const _ = require("lodash");
 function findBestBid(splitIndex, storedObsOrdered) {
     let i = splitIndex;
-    if (!storedObsOrdered[splitIndex]) {
-        throw new Error(`invalid splitIndex=${splitIndex}`);
+    if (!storedObsOrdered[i]) {
+        throw new Error(`findBestBid invalid splitIndex=${i}`);
     }
-    const sideSplit = storedObsOrdered[splitIndex].s;
+    if (storedObsOrdered[i].a === 0) {
+        // is this deleted item, start from top
+        i = 0;
+    }
+    const sideSplit = storedObsOrdered[i].s;
     if (sideSplit === 0) {
         // go down until we see Sell
         while (i < storedObsOrdered.length && (storedObsOrdered[i].s === 0 || storedObsOrdered[i].a === 0)) {
@@ -25,8 +29,15 @@ function findBestBid(splitIndex, storedObsOrdered) {
 exports.findBestBid = findBestBid;
 function findBestAsk(splitIndex, storedObsOrdered) {
     let i = splitIndex;
-    const sideSplit = storedObsOrdered[splitIndex].s;
-    if (sideSplit === 0) {
+    if (!storedObsOrdered[i]) {
+        throw new Error(`findBestAsk invalid splitIndex=${i}`);
+    }
+    if (storedObsOrdered[i].a === 0) {
+        // is this deleted item, start from bottom
+        i = storedObsOrdered.length - 1;
+    }
+    const sideSplit = storedObsOrdered[i].s;
+    if (sideSplit === 0 || storedObsOrdered[i].a === 0) {
         // go down until we see Sell
         while (i < storedObsOrdered.length && (storedObsOrdered[i].s === 0 || storedObsOrdered[i].a === 0)) {
             i++;

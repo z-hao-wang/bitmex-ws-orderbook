@@ -85,7 +85,6 @@ export class BybitOrderBookKeeper extends BaseKeeper {
 
   onReceiveOb(obs: BybitOb.OrderBooks, _pair?: string) {
     // for rebuilding orderbook process.
-
     if (_.includes(['snapshot'], obs.type)) {
       // first init, refresh ob data.
       const obRows = (obs as BybitOb.OrderBooksNew).data;
@@ -105,6 +104,24 @@ export class BybitOrderBookKeeper extends BaseKeeper {
       reverseBuildIndex(this.storedObsOrdered[pair], this.storedObs[pair]);
     } else if (obs.type === 'delta') {
       let pair = _pair;
+      if (!_.isEmpty(obs.data.insert)) {
+        pair = _pair || obs.data.insert[0].symbol;
+        this.storedObs[pair] = this.storedObs[pair] || {};
+        this.storedObsOrdered[pair] = this.storedObsOrdered[pair] || [];
+      }
+
+      _.each((obs as BybitOb.OrderBooksDelta).data.insert, row => {
+        pair = _pair || row.symbol;
+        const newRowRef = this.toInternalOb(row);
+        this.storedObs[pair][String(row.id)] = newRowRef;
+        this.searchAndInsertObRow(newRowRef, pair);
+      });
+
+      if (pair && !this.storedObs[pair]) {
+        // wait for first ob snapshot
+        return;
+      }
+
       // if this order exists, we update it, otherwise don't worry
       _.each((obs as BybitOb.OrderBooksDelta).data.update, row => {
         pair = _pair || row.symbol;
@@ -118,20 +135,17 @@ export class BybitOrderBookKeeper extends BaseKeeper {
           }
         }
       });
-      _.each((obs as BybitOb.OrderBooksDelta).data.insert, row => {
-        const pair = _pair || row.symbol;
-        const newRowRef = this.toInternalOb(row);
-        this.storedObs[pair][String(row.id)] = newRowRef;
-        this.searchAndInsertObRow(newRowRef, pair);
-      });
 
       // reverse build index
-      if (pair) {
+      if (pair && !_.isEmpty((obs as BybitOb.OrderBooksDelta).data.insert)) {
         reverseBuildIndex(this.storedObsOrdered[pair], this.storedObs[pair]);
       }
 
       _.each((obs as BybitOb.OrderBooksDelta).data.delete, row => {
         pair = _pair || row.symbol;
+        if (!this.storedObs[pair]) {
+          console.error(`invalid ob for pair ${pair}`, this.storedObs[pair]);
+        }
         if (this.storedObs[pair][String(row.id)]) {
           const idx = this.storedObs[pair][String(row.id)].idx!;
           this.storedObsOrdered[pair][idx].a = 0;
@@ -153,12 +167,17 @@ export class BybitOrderBookKeeper extends BaseKeeper {
     const bidsUnsorted: OrderBookItem[] = _.map(bidsUnsortedRaw, d => ({ r: +d.r, a: d.a }));
     const asksUnsorted: OrderBookItem[] = _.map(askUnsortedRaw, d => ({ r: +d.r, a: d.a }));
 
-    return sortOrderBooks({
+    const sortedOb = sortOrderBooks({
       pair,
       ts: this.lastObWsTime!,
-      bids: bidsUnsorted.slice(0, depth),
-      asks: asksUnsorted.slice(0, depth),
+      bids: bidsUnsorted,
+      asks: asksUnsorted,
     });
+    return {
+      ...sortedOb,
+      bids: sortedOb.bids.slice(0, depth),
+      asks: sortedOb.asks.slice(0, depth),
+    };
   }
 
   protected findBestBid(pair: string) {
@@ -177,14 +196,21 @@ export class BybitOrderBookKeeper extends BaseKeeper {
     const bidI = this.findBestBid(pair).i;
     const askI = this.findBestAsk(pair).i;
     const { bids, asks } = buildFromOrderedOb({ bidI, askI, depth, storedObsOrdered: this.storedObsOrdered[pair] });
+    // temp
     const verifyWithOldMethod = false;
-    if (verifyWithOldMethod) {
+    if (verifyWithOldMethod && asks.length > 0 && bids.length > 0) {
       const oldOb = this.getOrderBookWsOld(pair, depth)!;
-      if (oldOb.asks[0].r !== asks[0].r) {
-        console.error(`unmatching ob asks`, oldOb.asks, asks);
+      if (_.get(oldOb.asks[0], 'r') !== asks[0].r) {
+        console.error(
+          `unmatching ob asks`,
+          { oldAsks: oldOb.asks, oldbids: oldOb.bids, asks, bids },
+          this.storedObsOrdered[pair],
+          this.storedObs[pair],
+        );
+        process.exit(1);
       }
-      if (oldOb.bids[0].r !== bids[0].r) {
-        console.error(`unmatching ob bids`, oldOb.bids, bids);
+      if (_.get(oldOb.bids[0], 'r') !== bids[0].r) {
+        console.error(`unmatching ob bids`, { oldAsks: oldOb.asks, oldbids: oldOb.bids, bids, asks });
       }
     }
     return {
