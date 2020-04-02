@@ -1,4 +1,6 @@
 import { BitmexOrderBookKeeper } from '../bitmexOrderBookKeeper';
+const bitmexObRaw = require('./bitmexObRaw.json');
+import * as _ from 'lodash';
 
 describe('bitmex ob keeper', () => {
   const pair = 'USD_BTC_perpetual_swap';
@@ -40,5 +42,13 @@ describe('bitmex ob keeper', () => {
     keeper.onReceiveOb(obs[0].data as any, obs[0].action, pair);
     keeper.onReceiveOb(obs[2].data as any, obs[2].action, pair);
     expect(keeper.getOrderBookWs(pair)).toMatchSnapshot();
+  });
+
+  it('raw ob works', () => {
+    const keeper = new BitmexOrderBookKeeper({});
+    _.each(bitmexObRaw, ob => {
+      keeper.onReceiveOb(ob.data as any, ob.action, pair);
+    });
+    expect(keeper.getOrderBookWs(pair)).toEqual(keeper.getOrderBookWsOld(pair));
   });
 });

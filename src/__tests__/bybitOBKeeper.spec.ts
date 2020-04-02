@@ -1,4 +1,6 @@
 import { BybitOrderBookKeeper } from '../byBitOrderBookKeeper';
+const bybitObRaw = require('./bybitObRaw.json');
+import * as _ from 'lodash';
 
 describe('bitmex ob keeper', () => {
   let keeper: BybitOrderBookKeeper;
@@ -32,9 +34,15 @@ describe('bitmex ob keeper', () => {
   });
 
   it(`works with update and delete`, () => {
-    const keeper = new BybitOrderBookKeeper({});
     keeper.onReceiveOb(obs[0] as any, pair);
     keeper.onReceiveOb(obs[1] as any, pair);
     expect(keeper.getOrderBookWs(pair)).toMatchSnapshot();
+  });
+
+  it('raw ob works', () => {
+    _.each(bybitObRaw, ob => {
+      keeper.onReceiveOb(ob.data as any, pair);
+    });
+    expect(keeper.getOrderBookWs(pair)).toEqual(keeper.getOrderBookWsOld(pair));
   });
 });
