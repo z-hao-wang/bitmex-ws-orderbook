@@ -15,6 +15,7 @@ const traderUtils = require("./utils/traderUtils");
 const parsingUtils_1 = require("./utils/parsingUtils");
 const baseKeeper_1 = require("./baseKeeper");
 const searchUtils_1 = require("./utils/searchUtils");
+const orderdOrderbookUtils_1 = require("./utils/orderdOrderbookUtils");
 // new method is much much faster than old one
 const USING_NEW_METHOD = true;
 class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
@@ -110,12 +111,7 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
                 // }
             });
             // reverse build index
-            _.each(this.storedObsOrdered[pair], (o, i) => {
-                // undefined is allowed due to it can be deleted
-                if (this.storedObs[pair][String(o.id)]) {
-                    this.storedObs[pair][String(o.id)].idx = i;
-                }
-            });
+            orderdOrderbookUtils_1.reverseBuildIndex(this.storedObsOrdered[pair], this.storedObs[pair]);
         }
         else if (action === 'update') {
             // if this order exists, we update it, otherwise don't worry
@@ -188,31 +184,11 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
         if (USING_NEW_METHOD) {
             const bidI = this.findBestBid(pair).i;
             const askI = this.findBestAsk(pair).i;
-            const asks = [];
-            const bids = [];
-            const storedOrdered = this.storedObsOrdered[pair];
-            for (let i = bidI; i >= 0 && bids.length < depth; i--) {
-                const item = storedOrdered[i];
-                if (item.a > 0) {
-                    bids.push({
-                        r: item.r,
-                        a: item.a,
-                    });
-                }
-            }
-            for (let i = askI; i < storedOrdered.length && asks.length < depth; i++) {
-                const item = storedOrdered[i];
-                if (item.a > 0) {
-                    asks.push({
-                        r: item.r,
-                        a: item.a,
-                    });
-                }
-            }
+            const { bids, asks } = orderdOrderbookUtils_1.buildFromOrderedOb({ bidI, askI, depth, storedObsOrdered: this.storedObsOrdered[pair] });
             if (this.verifyWithOldMethod) {
                 const oldOb = this.getOrderBookWsOld(pair, depth);
                 if (oldOb.asks[0].r !== asks[0].r) {
-                    console.error(`unmatching ob asks`, oldOb.asks, storedOrdered);
+                    console.error(`unmatching ob asks`, oldOb.asks, asks);
                 }
                 if (oldOb.bids[0].r !== bids[0].r) {
                     console.error(`unmatching ob bids`, oldOb.bids, bids);
@@ -232,47 +208,11 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
     }
     findBestBid(pair) {
         const splitIndex = this.getSplitIndex(pair);
-        let i = splitIndex;
-        if (!this.storedObsOrdered[pair][splitIndex]) {
-            this.logger.error(`invalid splitIndex=${splitIndex}`);
-            throw new Error(`invalid splitIndex=${splitIndex}`);
-        }
-        const sideSplit = this.storedObsOrdered[pair][splitIndex].s;
-        if (sideSplit === 0) {
-            // go down until we see Sell
-            while (i < this.storedObsOrdered[pair].length &&
-                (this.storedObsOrdered[pair][i].s === 0 || this.storedObsOrdered[pair][i].a === 0)) {
-                i++;
-            }
-            return { i: i - 1, bid: this.storedObsOrdered[pair][i - 1] };
-        }
-        else {
-            // go up until we see first buy
-            while (i > 0 && (this.storedObsOrdered[pair][i].s === 1 || this.storedObsOrdered[pair][i].a === 0)) {
-                i--;
-            }
-            return { i: i, bid: this.storedObsOrdered[pair][i] };
-        }
+        return orderdOrderbookUtils_1.findBestBid(splitIndex, this.storedObsOrdered[pair]);
     }
     findBestAsk(pair) {
         const splitIndex = this.getSplitIndex(pair);
-        let i = splitIndex;
-        const sideSplit = this.storedObsOrdered[pair][splitIndex].s;
-        if (sideSplit === 0) {
-            // go down until we see Sell
-            while (i < this.storedObsOrdered[pair].length &&
-                (this.storedObsOrdered[pair][i].s === 0 || this.storedObsOrdered[pair][i].a === 0)) {
-                i++;
-            }
-            return { i: i, ask: this.storedObsOrdered[pair][i] };
-        }
-        else {
-            // go up until we see first buy
-            while (i >= 0 && (this.storedObsOrdered[pair][i].s === 1 || this.storedObsOrdered[pair][i].a === 0)) {
-                i--;
-            }
-            return { i: i + 1, ask: this.storedObsOrdered[pair][i + 1] };
-        }
+        return orderdOrderbookUtils_1.findBestAsk(splitIndex, this.storedObsOrdered[pair]);
     }
     pollOrderBook(pairEx) {
         return __awaiter(this, void 0, void 0, function* () {

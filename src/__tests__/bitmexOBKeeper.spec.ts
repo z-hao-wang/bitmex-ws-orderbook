@@ -26,7 +26,6 @@ describe('bitmex ob keeper', () => {
     const keeper = new BitmexOrderBookKeeper({});
     keeper.onReceiveOb(obs[0].data as any, obs[0].action, pair);
     expect(keeper.getOrderBookWs(pair)).toMatchSnapshot();
-    keeper.onReceiveOb(obs[1].data as any, obs[1].action, pair);
   });
 
   it(`works with update`, () => {

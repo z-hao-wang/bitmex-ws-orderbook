@@ -3,8 +3,11 @@ import { BybitRequest } from 'bitmex-request';
 import * as traderUtils from './utils/traderUtils';
 import { sortOrderBooks, verifyObPollVsObWs } from './utils/parsingUtils';
 import { BybitOb } from './types/bybit.type';
+import { InternalOb } from './types/shared.type';
 import { OrderBookItem, OrderBookSchema } from 'bitmex-request';
 import { BaseKeeper } from './baseKeeper';
+import { sortedFindIndex } from './utils/searchUtils';
+import { buildFromOrderedOb, findBestAsk, findBestBid, reverseBuildIndex } from './utils/orderdOrderbookUtils';
 
 export namespace BybitOrderBookKeeper {
   export interface Options extends BaseKeeper.Options {
@@ -13,7 +16,9 @@ export namespace BybitOrderBookKeeper {
 }
 
 export class BybitOrderBookKeeper extends BaseKeeper {
-  protected storedObs: Record<string, Record<string, BybitOb.OBRow>> = {};
+  protected storedObs: Record<string, Record<string, InternalOb>> = {};
+  protected storedObsOrdered: Record<string, InternalOb[]> = {};
+  protected currentSplitIndex: Record<string, number> = {};
   protected testnet: boolean;
   protected bybitRequest: BybitRequest;
   name = 'bybitObKeeper';
@@ -37,6 +42,7 @@ export class BybitOrderBookKeeper extends BaseKeeper {
       const pair = pairMatch && pairMatch[1];
       if (pair) {
         this.storedObs[pair] = this.storedObs[pair] || {};
+        this.lastObWsTime = new Date();
         this.onReceiveOb(res);
       }
     } catch (e) {
@@ -44,51 +50,108 @@ export class BybitOrderBookKeeper extends BaseKeeper {
     }
   }
 
+  toInternalOb(ob: BybitOb.OBRow): InternalOb {
+    return {
+      s: ob.side === 'Buy' ? 0 : 1,
+      r: parseFloat(ob.price),
+      a: ob.size,
+      id: ob.id,
+    };
+  }
+
+  private searchAndInsertObRow(newRowRef: InternalOb, pair: string) {
+    if (this.storedObsOrdered[pair].length === 0) {
+      this.storedObsOrdered[pair].push(newRowRef);
+    } else if (newRowRef.r > _.last(this.storedObsOrdered[pair])!.r) {
+      this.storedObsOrdered[pair].push(newRowRef);
+    } else if (newRowRef.r < _.first(this.storedObsOrdered[pair])!.r) {
+      this.storedObsOrdered[pair].unshift(newRowRef);
+    } else {
+      // try to find the price using binary search first. slightly faster.
+      const foundIndex = sortedFindIndex(this.storedObsOrdered[pair], newRowRef.r, x => x.r);
+      if (foundIndex !== -1) {
+        this.storedObsOrdered[pair][foundIndex] = newRowRef;
+      } else {
+        // if not found, insert with new price.
+        for (let i = 0; i < this.storedObsOrdered[pair].length; i++) {
+          if (newRowRef.r < this.storedObsOrdered[pair][i].r) {
+            this.storedObsOrdered[pair].splice(i, 0, newRowRef);
+            break;
+          }
+        }
+      }
+    }
+  }
+
   onReceiveOb(obs: BybitOb.OrderBooks, _pair?: string) {
     // for rebuilding orderbook process.
-    if (_pair) {
-      this.storedObs[_pair] = this.storedObs[_pair] || {};
-    }
+
     if (_.includes(['snapshot'], obs.type)) {
       // first init, refresh ob data.
       const obRows = (obs as BybitOb.OrderBooksNew).data;
+      const pair = _pair || obRows[0].symbol;
+      // reset data
+      if (pair) {
+        this.storedObs[pair] = {};
+        this.storedObsOrdered[pair] = [];
+      }
       _.each(obRows, row => {
         const pair = _pair || row.symbol;
-        this.storedObs[pair][String(row.id)] = row;
+        const newRowRef = this.toInternalOb(row);
+        this.storedObs[pair][String(row.id)] = newRowRef;
+        this.searchAndInsertObRow(newRowRef, pair);
       });
+      // reverse build index
+      reverseBuildIndex(this.storedObsOrdered[pair], this.storedObs[pair]);
     } else if (obs.type === 'delta') {
+      let pair = _pair;
       // if this order exists, we update it, otherwise don't worry
       _.each((obs as BybitOb.OrderBooksDelta).data.update, row => {
-        const pair = _pair || row.symbol;
+        pair = _pair || row.symbol;
         if (this.storedObs[pair][String(row.id)]) {
           // must update one by one because update doesn't contain price
-          this.storedObs[pair][String(row.id)].size = row.size;
-          this.storedObs[pair][String(row.id)].side = row.side;
+          const newRowRef = this.toInternalOb(row);
+          this.storedObs[pair][String(row.id)].a = newRowRef.a;
+          if (this.storedObs[pair][String(row.id)].s !== newRowRef.s) {
+            this.storedObs[pair][String(row.id)].s = newRowRef.s;
+            this.currentSplitIndex[pair] = this.storedObs[pair][String(row.id)].idx!;
+          }
         }
       });
       _.each((obs as BybitOb.OrderBooksDelta).data.insert, row => {
         const pair = _pair || row.symbol;
-        this.storedObs[pair][String(row.id)] = row;
+        const newRowRef = this.toInternalOb(row);
+        this.storedObs[pair][String(row.id)] = newRowRef;
+        this.searchAndInsertObRow(newRowRef, pair);
       });
+
+      // reverse build index
+      if (pair) {
+        reverseBuildIndex(this.storedObsOrdered[pair], this.storedObs[pair]);
+      }
+
       _.each((obs as BybitOb.OrderBooksDelta).data.delete, row => {
-        const pair = _pair || row.symbol;
-        delete this.storedObs[pair][String(row.id)];
+        pair = _pair || row.symbol;
+        if (this.storedObs[pair][String(row.id)]) {
+          const idx = this.storedObs[pair][String(row.id)].idx!;
+          this.storedObsOrdered[pair][idx].a = 0;
+          delete this.storedObs[pair][String(row.id)];
+        }
       });
     }
 
-    this.lastObWsTime = new Date();
     if (this.enableEvent) {
       this.emit(`orderbook`, this.getOrderBookWs(obs.topic.match(/orderBookL2_25\.(.*)/)![1]));
     }
   }
 
-  getOrderBookWs(pair: string, depth: number = 25): OrderBookSchema | null {
+  getOrderBookWsOld(pair: string, depth: number = 25): OrderBookSchema | null {
     const dataRaw = this.storedObs[pair];
     if (!dataRaw) return null;
-    const bidsUnsortedRaw = _.filter(dataRaw, o => o.side === 'Buy' && o.size > 0);
-    const askUnsortedRaw = _.filter(dataRaw, o => o.side === 'Sell' && o.size > 0);
-    const bidsUnsorted: OrderBookItem[] = _.map(bidsUnsortedRaw, d => ({ r: +d.price, a: d.size }));
-    const asksUnsorted: OrderBookItem[] = _.map(askUnsortedRaw, d => ({ r: +d.price, a: d.size }));
+    const bidsUnsortedRaw = _.filter(dataRaw, o => o.s === 0 && o.a > 0);
+    const askUnsortedRaw = _.filter(dataRaw, o => o.s === 1 && o.a > 0);
+    const bidsUnsorted: OrderBookItem[] = _.map(bidsUnsortedRaw, d => ({ r: +d.r, a: d.a }));
+    const asksUnsorted: OrderBookItem[] = _.map(askUnsortedRaw, d => ({ r: +d.r, a: d.a }));
 
     return sortOrderBooks({
       pair,
@@ -96,6 +159,47 @@ export class BybitOrderBookKeeper extends BaseKeeper {
       bids: bidsUnsorted.slice(0, depth),
       asks: asksUnsorted.slice(0, depth),
     });
+  }
+
+  protected findBestBid(pair: string) {
+    const splitIndex = this.getSplitIndex(pair);
+    return findBestBid(splitIndex, this.storedObsOrdered[pair]);
+  }
+
+  protected findBestAsk(pair: string) {
+    const splitIndex = this.getSplitIndex(pair);
+    return findBestAsk(splitIndex, this.storedObsOrdered[pair]);
+  }
+
+  getOrderBookWs(pair: string, depth: number = 25): OrderBookSchema | null {
+    const dataRaw = this.storedObs[pair];
+    if (!dataRaw) return null;
+    const bidI = this.findBestBid(pair).i;
+    const askI = this.findBestAsk(pair).i;
+    const { bids, asks } = buildFromOrderedOb({ bidI, askI, depth, storedObsOrdered: this.storedObsOrdered[pair] });
+    const verifyWithOldMethod = 1;
+    if (verifyWithOldMethod) {
+      const oldOb = this.getOrderBookWsOld(pair, depth)!;
+      if (oldOb.asks[0].r !== asks[0].r) {
+        console.error(`unmatching ob asks`, oldOb.asks, asks);
+      }
+      if (oldOb.bids[0].r !== bids[0].r) {
+        console.error(`unmatching ob bids`, oldOb.bids, bids);
+      }
+    }
+    return {
+      pair,
+      ts: this.lastObWsTime!,
+      bids,
+      asks,
+    };
+  }
+
+  getSplitIndex(pair: string) {
+    if (!this.currentSplitIndex[pair]) {
+      return Math.floor(this.storedObsOrdered[pair].length / 2);
+    }
+    return this.currentSplitIndex[pair];
   }
 
   async pollOrderBook(pairEx: string): Promise<OrderBookSchema> {
