@@ -13,7 +13,7 @@ export function findBestBid(splitIndex: number, storedObsOrdered: InternalOb[]) 
   }
 
   const sideSplit = storedObsOrdered[i].s;
-  if (sideSplit === 0) {
+  if (i === 0 || sideSplit === 0) {
     // go down until we see Sell
     while (i < storedObsOrdered.length && (storedObsOrdered[i].s === 0 || storedObsOrdered[i].a === 0)) {
       i++;
@@ -30,17 +30,17 @@ export function findBestBid(splitIndex: number, storedObsOrdered: InternalOb[]) 
 
 export function findBestAsk(splitIndex: number, storedObsOrdered: InternalOb[]) {
   let i = splitIndex;
-
+  let lastIndex = storedObsOrdered.length - 1;
   if (!storedObsOrdered[i]) {
     throw new Error(`findBestAsk invalid splitIndex=${i}`);
   }
   if (storedObsOrdered[i].a === 0) {
     // is this deleted item, start from bottom
-    i = storedObsOrdered.length - 1;
+    i = lastIndex;
   }
 
   const sideSplit = storedObsOrdered[i].s;
-  if (sideSplit === 0 || storedObsOrdered[i].a === 0) {
+  if (i !== lastIndex && (sideSplit === 0 || storedObsOrdered[i].a === 0)) {
     // go down until we see Sell
     while (i < storedObsOrdered.length && (storedObsOrdered[i].s === 0 || storedObsOrdered[i].a === 0)) {
       i++;

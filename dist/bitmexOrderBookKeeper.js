@@ -187,10 +187,10 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
             const { bids, asks } = orderdOrderbookUtils_1.buildFromOrderedOb({ bidI, askI, depth, storedObsOrdered: this.storedObsOrdered[pair] });
             if (this.verifyWithOldMethod) {
                 const oldOb = this.getOrderBookWsOld(pair, depth);
-                if (oldOb.asks[0].r !== asks[0].r) {
+                if (_.get(oldOb.asks[0], 'r') !== _.get(asks[0], 'r')) {
                     console.error(`unmatching ob asks`, oldOb.asks, asks);
                 }
-                if (oldOb.bids[0].r !== bids[0].r) {
+                if (_.get(oldOb.bids[0], 'r') !== _.get(bids[0], 'r')) {
                     console.error(`unmatching ob bids`, oldOb.bids, bids);
                 }
             }
