@@ -19,7 +19,7 @@ describe('bitmex ob keeper', () => {
             data: {
                 update: [{ id: 8716991250, side: 'Sell', size: 23063 }],
                 delete: [{ id: 8700000201 }],
-            }
+            },
         },
     ];
     beforeEach(() => {

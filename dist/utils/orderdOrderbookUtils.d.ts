@@ -1,5 +1,5 @@
 import { InternalOb } from '../types/shared.type';
-import { OrderBookItem } from "bitmex-request";
+import { OrderBookItem } from 'bitmex-request';
 export declare function findBestBid(splitIndex: number, storedObsOrdered: InternalOb[]): {
     i: number;
     bid: InternalOb;

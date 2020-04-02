@@ -9,8 +9,7 @@ function findBestBid(splitIndex, storedObsOrdered) {
     const sideSplit = storedObsOrdered[splitIndex].s;
     if (sideSplit === 0) {
         // go down until we see Sell
-        while (i < storedObsOrdered.length &&
-            (storedObsOrdered[i].s === 0 || storedObsOrdered[i].a === 0)) {
+        while (i < storedObsOrdered.length && (storedObsOrdered[i].s === 0 || storedObsOrdered[i].a === 0)) {
             i++;
         }
         return { i: i - 1, bid: storedObsOrdered[i - 1] };
@@ -29,8 +28,7 @@ function findBestAsk(splitIndex, storedObsOrdered) {
     const sideSplit = storedObsOrdered[splitIndex].s;
     if (sideSplit === 0) {
         // go down until we see Sell
-        while (i < storedObsOrdered.length &&
-            (storedObsOrdered[i].s === 0 || storedObsOrdered[i].a === 0)) {
+        while (i < storedObsOrdered.length && (storedObsOrdered[i].s === 0 || storedObsOrdered[i].a === 0)) {
             i++;
         }
         return { i: i, ask: storedObsOrdered[i] };

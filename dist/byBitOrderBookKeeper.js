@@ -168,7 +168,7 @@ class BybitOrderBookKeeper extends baseKeeper_1.BaseKeeper {
         const bidI = this.findBestBid(pair).i;
         const askI = this.findBestAsk(pair).i;
         const { bids, asks } = orderdOrderbookUtils_1.buildFromOrderedOb({ bidI, askI, depth, storedObsOrdered: this.storedObsOrdered[pair] });
-        const verifyWithOldMethod = 1;
+        const verifyWithOldMethod = false;
         if (verifyWithOldMethod) {
             const oldOb = this.getOrderBookWsOld(pair, depth);
             if (oldOb.asks[0].r !== asks[0].r) {
