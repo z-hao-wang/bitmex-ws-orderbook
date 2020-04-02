@@ -1,6 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const byBitOrderBookKeeper_1 = require("../byBitOrderBookKeeper");
+const bybitObRaw = require('./bybitObRaw.json');
+const _ = require("lodash");
 describe('bitmex ob keeper', () => {
     let keeper;
     const pair = 'USD_BTC_perpetual_swap';
@@ -30,9 +32,14 @@ describe('bitmex ob keeper', () => {
         expect(keeper.getOrderBookWs(pair)).toMatchSnapshot();
     });
     it(`works with update and delete`, () => {
-        const keeper = new byBitOrderBookKeeper_1.BybitOrderBookKeeper({});
         keeper.onReceiveOb(obs[0], pair);
         keeper.onReceiveOb(obs[1], pair);
         expect(keeper.getOrderBookWs(pair)).toMatchSnapshot();
+    });
+    it('raw ob works', () => {
+        _.each(bybitObRaw, ob => {
+            keeper.onReceiveOb(ob.data, pair);
+        });
+        expect(keeper.getOrderBookWs(pair)).toEqual(keeper.getOrderBookWsOld(pair));
     });
 });
