@@ -36,20 +36,24 @@ class BaseKeeper extends EventEmitter {
     pollOrderBookWithRateLimit(pairEx) {
         return __awaiter(this, void 0, void 0, function* () {
             // apply some sort of rate limit to this, otherwise it may go crazy.
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                 try {
                     const ran = this.pollingRateLimiter.run(() => __awaiter(this, void 0, void 0, function* () {
                         this.cachedPollOrderBook[pairEx] = yield this.pollOrderBook(pairEx);
                         resolve(this.cachedPollOrderBook[pairEx]);
                     }));
                     if (!ran) {
+                        // it's possible this is first time fetching, just poll orderbook
+                        if (!this.cachedPollOrderBook[pairEx]) {
+                            this.cachedPollOrderBook[pairEx] = yield this.pollOrderBook(pairEx);
+                        }
                         resolve(this.cachedPollOrderBook[pairEx]);
                     }
                 }
                 catch (e) {
                     reject(null);
                 }
-            });
+            }));
         });
     }
 }

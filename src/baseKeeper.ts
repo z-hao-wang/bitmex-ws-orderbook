@@ -40,13 +40,17 @@ export class BaseKeeper extends EventEmitter {
 
   async pollOrderBookWithRateLimit(pairEx: string) {
     // apply some sort of rate limit to this, otherwise it may go crazy.
-    return new Promise<OrderBookSchema>((resolve, reject) => {
+    return new Promise<OrderBookSchema>(async (resolve, reject) => {
       try {
         const ran = this.pollingRateLimiter.run(async () => {
           this.cachedPollOrderBook[pairEx] = await this.pollOrderBook(pairEx);
           resolve(this.cachedPollOrderBook[pairEx]);
         });
         if (!ran) {
+          // it's possible this is first time fetching, just poll orderbook
+          if (!this.cachedPollOrderBook[pairEx]) {
+            this.cachedPollOrderBook[pairEx] = await this.pollOrderBook(pairEx);
+          }
           resolve(this.cachedPollOrderBook[pairEx]);
         }
       } catch (e) {
