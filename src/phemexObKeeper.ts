@@ -2,18 +2,20 @@ import { OrderBookItem } from 'bitmex-request';
 import { GenericObKeeper } from './genericObKeeper';
 import * as _ from 'lodash';
 
-export interface ObRes {
-  bids: number[][];
-  asks: number[][];
-}
+export namespace PhemexObKeeper {
+  export interface ObRes {
+    bids: number[][];
+    asks: number[][];
+  }
 
-export interface ObWsData {
-  book: ObRes;
-  depth: number; // 30
-  sequence: number;
-  symbol: string;
-  timestamp: number; // nano seconds
-  type: 'incremental' | 'snapshot';
+  export interface ObWsData {
+    book: ObRes;
+    depth: number; // 30
+    sequence: number;
+    symbol: string;
+    timestamp: number; // nano seconds
+    type: 'incremental' | 'snapshot';
+  }
 }
 
 export function phemexToStandardOb(v: number[]): OrderBookItem {
@@ -23,7 +25,7 @@ export function phemexToStandardOb(v: number[]): OrderBookItem {
 export class PhemexObKeeper extends GenericObKeeper {
   onSocketMessage(msg: any) {
     try {
-      const res: ObWsData = _.isString(msg) ? JSON.parse(msg) : msg;
+      const res: PhemexObKeeper.ObWsData = _.isString(msg) ? JSON.parse(msg) : msg;
       const { book, symbol } = res;
       if (book) {
         this.onReceiveOb({

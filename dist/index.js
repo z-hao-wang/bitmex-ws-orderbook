@@ -9,3 +9,4 @@ __export(require("./bitfinexObKeeper"));
 __export(require("./gdaxObKeeper"));
 __export(require("./genericObKeeper"));
 __export(require("./binanceFxObKeeper"));
+__export(require("./phemexObKeeper"));
