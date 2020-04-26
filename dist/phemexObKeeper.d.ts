@@ -20,5 +20,6 @@ export declare class PhemexObKeeper extends GenericObKeeper {
     onReceiveObRaw(params: {
         pair: string;
         book: PhemexObKeeper.ObRes;
+        type: 'incremental' | 'snapshot';
     }): void;
 }

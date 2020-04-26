@@ -10,11 +10,12 @@ class PhemexObKeeper extends genericObKeeper_1.GenericObKeeper {
     onSocketMessage(msg) {
         try {
             const res = _.isString(msg) ? JSON.parse(msg) : msg;
-            const { book, symbol } = res;
+            const { book, symbol, type } = res;
             if (book) {
                 this.onReceiveObRaw({
                     pair: symbol,
                     book,
+                    type,
                 });
             }
         }
@@ -27,6 +28,7 @@ class PhemexObKeeper extends genericObKeeper_1.GenericObKeeper {
             pair: params.pair,
             bids: _.map(params.book.bids, phemexToStandardOb),
             asks: _.map(params.book.asks, phemexToStandardOb),
+            isNewSnapshot: params.type === 'snapshot'
         });
     }
 }
