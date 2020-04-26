@@ -28,14 +28,21 @@ export class PhemexObKeeper extends GenericObKeeper {
       const res: PhemexObKeeper.ObWsData = _.isString(msg) ? JSON.parse(msg) : msg;
       const { book, symbol } = res;
       if (book) {
-        this.onReceiveOb({
+        this.onReceiveObRaw({
           pair: symbol,
-          bids: _.map(book.bids, phemexToStandardOb),
-          asks: _.map(book.asks, phemexToStandardOb),
+          book,
         });
       }
     } catch (e) {
       this.logger.error('onSocketMessage', e);
     }
+  }
+
+  onReceiveObRaw(params: { pair: string; book: PhemexObKeeper.ObRes }) {
+    this.onReceiveOb({
+      pair: params.pair,
+      bids: _.map(params.book.bids, phemexToStandardOb),
+      asks: _.map(params.book.asks, phemexToStandardOb),
+    });
   }
 }

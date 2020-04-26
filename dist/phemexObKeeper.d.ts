@@ -17,4 +17,8 @@ export declare namespace PhemexObKeeper {
 export declare function phemexToStandardOb(v: number[]): OrderBookItem;
 export declare class PhemexObKeeper extends GenericObKeeper {
     onSocketMessage(msg: any): void;
+    onReceiveObRaw(params: {
+        pair: string;
+        book: PhemexObKeeper.ObRes;
+    }): void;
 }
