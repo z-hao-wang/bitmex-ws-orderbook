@@ -23,8 +23,11 @@ class GdaxObKeeper extends baseKeeper_1.BaseKeeper {
             const { type, product_id: pair } = res;
             // this logic is similar with transaction_flow/ob_bitmex_fx.ts
             if (type === 'snapshot') {
-                this.onReceiveOb({ pair, bids: _.map(res.bids, b => this.convertToObSchema(b)),
-                    asks: _.map(res.asks, b => this.convertToObSchema(b)), });
+                this.onReceiveOb({
+                    pair,
+                    bids: _.map(res.bids, b => this.convertToObSchema(b)),
+                    asks: _.map(res.asks, b => this.convertToObSchema(b)),
+                });
             }
             else if (type === 'l2update') {
                 this.performObUpdate(res);

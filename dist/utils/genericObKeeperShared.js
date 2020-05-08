@@ -13,15 +13,6 @@ class GenericObKeeperShared {
     }
     // if initial, return true
     onReceiveOb(params) {
-        // bids ordered from best to worst, from highest to lowest.
-        // if (params.bids.length > 1 && params.bids[0].r < params.bids[1].r) {
-        //   // this means initial order is reversed.
-        //   params.bids.reverse();
-        // }
-        // if (params.asks.length > 1 && params.asks[0].r > params.asks[1].r) {
-        //   // this means initial order is reversed.
-        //   params.asks.reverse();
-        // }
         // deal with special cases, the bid cannot be greater than ask.
         if (params.asks.length > 0) {
             while (this.bids.length > 0 && this.bids[0].r > params.asks[0].r) {
@@ -51,7 +42,7 @@ class GenericObKeeperShared {
                     bid.a > 0 && this.bids.unshift(bid);
                 }
                 else {
-                    const foundIndex = searchUtils_1.sortedFindFirstSmallerEqual(this.bids, bid.r, (b) => b.r);
+                    const foundIndex = searchUtils_1.sortedFindFirstSmallerEqual(this.bids, bid.r, b => b.r);
                     if (foundIndex === -1) {
                         console.error(`invalid condition, did not found index bid`, bid, this.bids.length);
                     }
@@ -93,7 +84,7 @@ class GenericObKeeperShared {
                     ask.a > 0 && this.asks.unshift(ask);
                 }
                 else {
-                    const foundIndex = searchUtils_1.sortedFindFirstGreaterEqual(this.asks, ask.r, (a) => a.r);
+                    const foundIndex = searchUtils_1.sortedFindFirstGreaterEqual(this.asks, ask.r, a => a.r);
                     if (foundIndex === -1) {
                         console.error(`invalid condition, did not found index ask`, ask, this.asks);
                     }

@@ -1,6 +1,6 @@
 import { OrderBookSchema, OrderBookItem } from 'bitmex-request';
 import { BaseKeeper } from './baseKeeper';
-import { GenericObKeeperShared } from "./utils/genericObKeeperShared";
+import { GenericObKeeperShared } from './utils/genericObKeeperShared';
 /**
  {
     "type": "snapshot",

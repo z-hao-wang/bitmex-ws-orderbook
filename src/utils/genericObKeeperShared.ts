@@ -11,16 +11,6 @@ export class GenericObKeeperShared {
   }
   // if initial, return true
   onReceiveOb(params: { bids: OrderBookItem[]; asks: OrderBookItem[] }) {
-    // bids ordered from best to worst, from highest to lowest.
-    // if (params.bids.length > 1 && params.bids[0].r < params.bids[1].r) {
-    //   // this means initial order is reversed.
-    //   params.bids.reverse();
-    // }
-    // if (params.asks.length > 1 && params.asks[0].r > params.asks[1].r) {
-    //   // this means initial order is reversed.
-    //   params.asks.reverse();
-    // }
-
     // deal with special cases, the bid cannot be greater than ask.
     if (params.asks.length > 0) {
       while (this.bids.length > 0 && this.bids[0].r > params.asks[0].r) {
