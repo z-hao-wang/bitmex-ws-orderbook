@@ -11,10 +11,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const _ = require("lodash");
 const baseKeeper_1 = require("./baseKeeper");
+const genericObKeeperShared_1 = require("./utils/genericObKeeperShared");
 class GdaxObKeeper extends baseKeeper_1.BaseKeeper {
     constructor() {
         super(...arguments);
-        this.obCache = {};
+        this.obKeepers = {};
     }
     onSocketMessage(msg) {
         try {
@@ -22,10 +23,8 @@ class GdaxObKeeper extends baseKeeper_1.BaseKeeper {
             const { type, product_id: pair } = res;
             // this logic is similar with transaction_flow/ob_bitmex_fx.ts
             if (type === 'snapshot') {
-                this.obCache[pair] = {
-                    bids: _.map(res.bids, b => this.convertToNum(b)),
-                    asks: _.map(res.asks, b => this.convertToNum(b)),
-                };
+                this.onReceiveOb({ pair, bids: _.map(res.bids, b => this.convertToObSchema(b)),
+                    asks: _.map(res.asks, b => this.convertToObSchema(b)), });
             }
             else if (type === 'l2update') {
                 this.performObUpdate(res);
@@ -38,75 +37,35 @@ class GdaxObKeeper extends baseKeeper_1.BaseKeeper {
             this.logger.error('onSocketMessage', e);
         }
     }
-    convertToNum(items) {
-        return _.map(items, b => parseFloat(b));
+    onReceiveOb(params) {
+        const { pair, bids, asks, isNewSnapshot } = params;
+        if (!this.obKeepers[pair]) {
+            this.obKeepers[pair] = new genericObKeeperShared_1.GenericObKeeperShared();
+        }
+        if (isNewSnapshot) {
+            this.obKeepers[pair].init();
+        }
+        this.obKeepers[pair].onReceiveOb({ bids, asks });
+        if (this.enableEvent) {
+            this.emit(`orderbook`, this.getOrderBookWs(pair));
+        }
+    }
+    convertToObSchema(item) {
+        return {
+            r: parseFloat(item[0]),
+            a: parseFloat(item[1]),
+        };
     }
     performObUpdate(data) {
         const pair = data.product_id;
-        if (!this.obCache[pair]) {
-            throw new Error(`gdax ob keeper invalid pair ${pair}, no existing data`);
-        }
         const { changes } = data;
         _.each(changes, change => {
             const side = change[0];
             const price = parseFloat(change[1]);
             const amount = parseFloat(change[2]);
-            if (side === 'buy') {
-                const obs = this.obCache[pair].bids;
-                let foundMatch = false;
-                for (let i = 0; i < obs.length; i++) {
-                    if (obs[i][0] === price) {
-                        if (amount > 0) {
-                            // replace
-                            obs[i][1] = amount;
-                        }
-                        else {
-                            //delete
-                            obs.splice(i, 1);
-                        }
-                        foundMatch = true;
-                        break;
-                    }
-                    else if (amount > 0 && obs[i][0] < price) {
-                        // price ordered from high to low (decending), when we met a price that is higher, must insert into book at this location
-                        obs.splice(i, 0, [price, amount]);
-                        foundMatch = true;
-                        break;
-                    }
-                }
-                if (!foundMatch) {
-                    // this means we need to insert item at bottom
-                    obs.push([price, amount]);
-                }
-            }
-            else if (side === 'sell') {
-                const obs = this.obCache[pair].asks;
-                let foundMatch = false;
-                for (let i = 0; i < obs.length; i++) {
-                    if (obs[i][0] === price) {
-                        if (amount > 0) {
-                            // replace
-                            obs[i][1] = amount;
-                        }
-                        else {
-                            //delete
-                            obs.splice(i, 1);
-                        }
-                        foundMatch = true;
-                        break;
-                    }
-                    else if (amount > 0 && obs[i][0] > price) {
-                        // price ordered from low to high (ascending), when we met a price that is lower, must insert into book at this location
-                        obs.splice(i, 0, [price, amount]);
-                        foundMatch = true;
-                        break;
-                    }
-                }
-                if (!foundMatch) {
-                    // insert at bottom of book
-                    obs.push([price, amount]);
-                }
-            }
+            const bids = side === 'buy' ? [{ r: price, a: amount }] : [];
+            const asks = side === 'sell' ? [{ r: price, a: amount }] : [];
+            this.obKeepers[pair].onReceiveOb({ bids, asks });
         });
     }
     formatOrderBookItem(orderBookItem) {
@@ -115,20 +74,15 @@ class GdaxObKeeper extends baseKeeper_1.BaseKeeper {
             a: orderBookItem[1],
         };
     }
-    getOrderBookWs(pair) {
-        const orderbooks = {
-            ts: new Date(),
-            pair,
-            bids: this.obCache[pair].bids.map(this.formatOrderBookItem),
-            asks: this.obCache[pair].asks.map(this.formatOrderBookItem),
-        };
+    getOrderBookWs(pair, depth = 25) {
+        const orderbooks = Object.assign(Object.assign({}, this.obKeepers[pair].getOb(depth)), { ts: new Date(), pair });
         if (orderbooks.asks.length == 0 || orderbooks.bids.length === 0) {
-            this.logger.error(`coinbase invalid bids or asks this.obCache[pair] ${pair}`, this.obCache[pair]);
+            this.logger.error(`coinbase invalid bids or asks this.obCache[pair] ${pair}`);
         }
         this.lastObWsTime = new Date();
         return orderbooks;
     }
-    // fallback polling not implmented
+    // fallback polling not implemented
     getOrderBook(pair) {
         return __awaiter(this, void 0, void 0, function* () {
             return this.getOrderBookWs(pair);

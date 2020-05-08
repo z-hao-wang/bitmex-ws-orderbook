@@ -28,7 +28,7 @@ class PhemexObKeeper extends genericObKeeper_1.GenericObKeeper {
             pair: params.pair,
             bids: _.map(params.book.bids, phemexToStandardOb),
             asks: _.map(params.book.asks, phemexToStandardOb),
-            isNewSnapshot: params.type === 'snapshot'
+            isNewSnapshot: params.type === 'snapshot',
         });
     }
 }

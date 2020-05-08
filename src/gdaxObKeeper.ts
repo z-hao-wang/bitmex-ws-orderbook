@@ -1,6 +1,7 @@
 import * as _ from 'lodash';
 import { OrderBookSchema, OrderBookItem } from 'bitmex-request';
 import { BaseKeeper } from './baseKeeper';
+import { GenericObKeeperShared } from './utils/genericObKeeperShared';
 /**
  {
     "type": "snapshot",
@@ -43,7 +44,7 @@ export namespace GdaxObKeeper {
 }
 
 export class GdaxObKeeper extends BaseKeeper {
-  obCache: Record<string, { bids: number[][]; asks: number[][] }> = {};
+  obKeepers: Record<string, GenericObKeeperShared> = {};
 
   onSocketMessage(msg: any) {
     try {
@@ -51,10 +52,11 @@ export class GdaxObKeeper extends BaseKeeper {
       const { type, product_id: pair } = res;
       // this logic is similar with transaction_flow/ob_bitmex_fx.ts
       if (type === 'snapshot') {
-        this.obCache[pair] = {
-          bids: _.map((res as GdaxObKeeper.OrderBookRealtimeSnap).bids, b => this.convertToNum(b)),
-          asks: _.map((res as GdaxObKeeper.OrderBookRealtimeSnap).asks, b => this.convertToNum(b)),
-        };
+        this.onReceiveOb({
+          pair,
+          bids: _.map((res as GdaxObKeeper.OrderBookRealtimeSnap).bids, b => this.convertToObSchema(b)),
+          asks: _.map((res as GdaxObKeeper.OrderBookRealtimeSnap).asks, b => this.convertToObSchema(b)),
+        });
       } else if (type === 'l2update') {
         this.performObUpdate(res as GdaxObKeeper.OrderBookRealtimeChange);
       } else {
@@ -65,72 +67,38 @@ export class GdaxObKeeper extends BaseKeeper {
     }
   }
 
-  convertToNum(items: string[]) {
-    return _.map(items, b => parseFloat(b));
+  onReceiveOb(params: { pair: string; bids: OrderBookItem[]; asks: OrderBookItem[]; isNewSnapshot?: boolean }) {
+    const { pair, bids, asks, isNewSnapshot } = params;
+    if (!this.obKeepers[pair]) {
+      this.obKeepers[pair] = new GenericObKeeperShared();
+    }
+    if (isNewSnapshot) {
+      this.obKeepers[pair].init();
+    }
+    this.obKeepers[pair].onReceiveOb({ bids, asks });
+
+    if (this.enableEvent) {
+      this.emit(`orderbook`, this.getOrderBookWs(pair));
+    }
+  }
+
+  convertToObSchema(item: string[]): OrderBookItem {
+    return {
+      r: parseFloat(item[0]),
+      a: parseFloat(item[1]),
+    };
   }
 
   performObUpdate(data: GdaxObKeeper.OrderBookRealtimeChange) {
     const pair = data.product_id;
-    if (!this.obCache[pair]) {
-      throw new Error(`gdax ob keeper invalid pair ${pair}, no existing data`);
-    }
     const { changes } = data;
     _.each(changes, change => {
       const side = change[0];
       const price = parseFloat(change[1]);
       const amount = parseFloat(change[2]);
-
-      if (side === 'buy') {
-        const obs = this.obCache[pair].bids;
-        let foundMatch = false;
-        for (let i = 0; i < obs.length; i++) {
-          if (obs[i][0] === price) {
-            if (amount > 0) {
-              // replace
-              obs[i][1] = amount;
-            } else {
-              //delete
-              obs.splice(i, 1);
-            }
-            foundMatch = true;
-            break;
-          } else if (amount > 0 && obs[i][0] < price) {
-            // price ordered from high to low (decending), when we met a price that is higher, must insert into book at this location
-            obs.splice(i, 0, [price, amount]);
-            foundMatch = true;
-            break;
-          }
-        }
-        if (!foundMatch) {
-          // this means we need to insert item at bottom
-          obs.push([price, amount]);
-        }
-      } else if (side === 'sell') {
-        const obs = this.obCache[pair].asks;
-        let foundMatch = false;
-        for (let i = 0; i < obs.length; i++) {
-          if (obs[i][0] === price) {
-            if (amount > 0) {
-              // replace
-              obs[i][1] = amount;
-            } else {
-              //delete
-              obs.splice(i, 1);
-            }
-            foundMatch = true;
-            break;
-          } else if (amount > 0 && obs[i][0] > price) {
-            // price ordered from low to high (ascending), when we met a price that is lower, must insert into book at this location
-            obs.splice(i, 0, [price, amount]);
-            foundMatch = true;
-            break;
-          }
-        }
-        if (!foundMatch) {
-          // insert at bottom of book
-          obs.push([price, amount]);
-        }
-      }
+      const bids = side === 'buy' ? [{ r: price, a: amount }] : [];
+      const asks = side === 'sell' ? [{ r: price, a: amount }] : [];
+      this.obKeepers[pair].onReceiveOb({ bids, asks });
     });
   }
 
@@ -141,21 +109,20 @@ export class GdaxObKeeper extends BaseKeeper {
     };
   }
 
-  getOrderBookWs(pair: string) {
+  getOrderBookWs(pair: string, depth = 25) {
     const orderbooks: OrderBookSchema = {
+      ...this.obKeepers[pair].getOb(depth),
       ts: new Date(),
       pair,
-      bids: this.obCache[pair].bids.map(this.formatOrderBookItem),
-      asks: this.obCache[pair].asks.map(this.formatOrderBookItem),
     };
     if (orderbooks.asks.length == 0 || orderbooks.bids.length === 0) {
-      this.logger.error(`coinbase invalid bids or asks this.obCache[pair] ${pair}`, this.obCache[pair]);
+      this.logger.error(`coinbase invalid bids or asks this.obCache[pair] ${pair}`);
     }
     this.lastObWsTime = new Date();
     return orderbooks;
   }
 
-  // fallback polling not implmented
+  // fallback polling not implemented
   async getOrderBook(pair: string) {
     return this.getOrderBookWs(pair);
   }

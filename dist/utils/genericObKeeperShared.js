@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const _ = require("lodash");
+const searchUtils_1 = require("./searchUtils");
 class GenericObKeeperShared {
     constructor() {
         this.bids = [];
@@ -13,14 +14,14 @@ class GenericObKeeperShared {
     // if initial, return true
     onReceiveOb(params) {
         // bids ordered from best to worst, from highest to lowest.
-        if (params.bids.length > 1 && params.bids[0].r < params.bids[1].r) {
-            // this means initial order is reversed.
-            params.bids.reverse();
-        }
-        if (params.asks.length > 1 && params.asks[0].r > params.asks[1].r) {
-            // this means initial order is reversed.
-            params.asks.reverse();
-        }
+        // if (params.bids.length > 1 && params.bids[0].r < params.bids[1].r) {
+        //   // this means initial order is reversed.
+        //   params.bids.reverse();
+        // }
+        // if (params.asks.length > 1 && params.asks[0].r > params.asks[1].r) {
+        //   // this means initial order is reversed.
+        //   params.asks.reverse();
+        // }
         // deal with special cases, the bid cannot be greater than ask.
         if (params.asks.length > 0) {
             while (this.bids.length > 0 && this.bids[0].r > params.asks[0].r) {
@@ -33,7 +34,6 @@ class GenericObKeeperShared {
             }
         }
         for (let bid of params.bids) {
-            let iterateStartIndex = 0;
             if (!bid || !bid.r) {
                 console.error(`invalid bid`, bid);
                 continue;
@@ -51,32 +51,32 @@ class GenericObKeeperShared {
                     bid.a > 0 && this.bids.unshift(bid);
                 }
                 else {
-                    for (let i = iterateStartIndex; i < this.bids.length; i++) {
-                        if (!this.bids[i]) {
-                            console.error(`invalid condition this.bids`, this.bids);
+                    const foundIndex = searchUtils_1.sortedFindFirstSmallerEqual(this.bids, bid.r, (b) => b.r);
+                    if (foundIndex === -1) {
+                        console.error(`invalid condition, did not found index bid`, bid, this.bids.length);
+                    }
+                    else {
+                        if (this.bids[foundIndex].r === bid.r) {
+                            if (bid.a === 0) {
+                                // delete
+                                this.bids.splice(foundIndex, 1);
+                            }
+                            else {
+                                // replace
+                                this.bids[foundIndex] = bid;
+                            }
                         }
-                        if (bid.a === 0 && bid.r === this.bids[i].r) {
-                            // need to delete this entry.
-                            iterateStartIndex = i - 1;
-                            this.bids.splice(i, 1);
-                            break;
-                        }
-                        else if (bid.r === this.bids[i].r) {
-                            this.bids[i] = bid;
-                            iterateStartIndex = i;
-                            break;
-                        }
-                        else if (bid.r > this.bids[i].r) {
-                            bid.a > 0 && this.bids.splice(i, 0, bid);
-                            iterateStartIndex = i;
-                            break;
+                        else {
+                            // insert
+                            if (bid.a > 0) {
+                                this.bids.splice(foundIndex, 0, bid);
+                            }
                         }
                     }
                 }
             }
         }
         for (let ask of params.asks) {
-            let iterateStartIndex = 0;
             if (!ask || !ask.r) {
                 console.error(`invalid ask`, ask);
                 continue;
@@ -93,25 +93,26 @@ class GenericObKeeperShared {
                     ask.a > 0 && this.asks.unshift(ask);
                 }
                 else {
-                    for (let i = iterateStartIndex; i < this.asks.length; i++) {
-                        if (!this.asks[i]) {
-                            console.error(`invalid condition this.asks`, this.asks);
+                    const foundIndex = searchUtils_1.sortedFindFirstGreaterEqual(this.asks, ask.r, (a) => a.r);
+                    if (foundIndex === -1) {
+                        console.error(`invalid condition, did not found index ask`, ask, this.asks);
+                    }
+                    else {
+                        if (this.asks[foundIndex].r === ask.r) {
+                            if (ask.a === 0) {
+                                // delete
+                                this.asks.splice(foundIndex, 1);
+                            }
+                            else {
+                                // replace
+                                this.asks[foundIndex] = ask;
+                            }
                         }
-                        if (ask.a === 0 && ask.r === this.asks[i].r) {
-                            // need to delete this entry.
-                            this.asks.splice(i, 1);
-                            iterateStartIndex = i - 1;
-                            break;
-                        }
-                        else if (ask.r == this.asks[i].r) {
-                            this.asks[i] = ask;
-                            iterateStartIndex = 1;
-                            break;
-                        }
-                        else if (ask.r < this.asks[i].r) {
-                            ask.a > 0 && this.asks.splice(i, 0, ask);
-                            iterateStartIndex = i;
-                            break;
+                        else {
+                            // insert
+                            if (ask.a > 0) {
+                                this.asks.splice(foundIndex, 0, ask);
+                            }
                         }
                     }
                 }

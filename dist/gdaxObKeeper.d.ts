@@ -1,5 +1,6 @@
 import { OrderBookSchema, OrderBookItem } from 'bitmex-request';
 import { BaseKeeper } from './baseKeeper';
+import { GenericObKeeperShared } from "./utils/genericObKeeperShared";
 /**
  {
     "type": "snapshot",
@@ -39,15 +40,18 @@ export declare namespace GdaxObKeeper {
     type OrderBookRealtime = OrderBookRealtimeSnap | OrderBookRealtimeChange;
 }
 export declare class GdaxObKeeper extends BaseKeeper {
-    obCache: Record<string, {
-        bids: number[][];
-        asks: number[][];
-    }>;
+    obKeepers: Record<string, GenericObKeeperShared>;
     onSocketMessage(msg: any): void;
-    convertToNum(items: string[]): number[];
+    onReceiveOb(params: {
+        pair: string;
+        bids: OrderBookItem[];
+        asks: OrderBookItem[];
+        isNewSnapshot?: boolean;
+    }): void;
+    convertToObSchema(item: string[]): OrderBookItem;
     performObUpdate(data: GdaxObKeeper.OrderBookRealtimeChange): void;
     formatOrderBookItem(orderBookItem: number[]): OrderBookItem;
-    getOrderBookWs(pair: string): OrderBookSchema;
+    getOrderBookWs(pair: string, depth?: number): OrderBookSchema;
     getOrderBook(pair: string): Promise<OrderBookSchema>;
     onOrderBookUpdated(callback: (ob: OrderBookSchema) => any): void;
 }
