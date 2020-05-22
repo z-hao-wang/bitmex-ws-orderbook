@@ -49,7 +49,7 @@ export class BinanceFxObKeeper extends GenericObKeeper {
       const { data } = res;
       if (data.e === 'depthUpdate') {
         this.onReceiveOb({
-          pair: data.s.toLowerCase(),
+          pair: data.s.toUpperCase(),
           bids: _.map(data.b, binanceObToStandardOb),
           asks: _.map(data.a, binanceObToStandardOb),
         });

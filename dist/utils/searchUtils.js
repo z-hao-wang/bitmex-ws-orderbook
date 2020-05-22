@@ -27,9 +27,6 @@ function sortedFindFirstGreater(arr, val, getter, allowEqual) {
     }
     while (start <= end) {
         let mid = Math.floor((start + end) / 2);
-        // if (mid >= arr.length) {
-        //   mid = arr.length - 1;
-        // }
         if (allowEqual && getter(arr[mid]) === val) {
             return mid;
         }
