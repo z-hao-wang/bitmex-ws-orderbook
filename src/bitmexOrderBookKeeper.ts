@@ -54,7 +54,7 @@ export class BitmexOrderBookKeeper extends BaseKeeper {
       const res = _.isString(msg) ? JSON.parse(msg) : msg;
       const { table, action, data } = res;
       // this logic is similar with transaction_flow/ob_bitmex_fx.ts
-      if (table === 'orderBookL2_25') {
+      if (table === 'orderBookL2_25' || table === 'orderBookL2') {
         if (data.length === 0) {
           this.logger.warn(`_saveWsObData empty obRows`);
           return;
