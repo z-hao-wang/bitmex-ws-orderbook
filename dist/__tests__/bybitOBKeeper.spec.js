@@ -54,7 +54,7 @@ describe('bitmex ob keeper', () => {
         delete ob.ts;
         expect(ob).toMatchSnapshot();
     });
-    it.only('raw ob works', () => {
+    it('raw ob works', () => {
         const keeperOld = new bybitOrderBookKeeperOld_1.BybitOrderBookKeeper({});
         _.each(bybitObRaw, ob => {
             keeper.onReceiveOb(ob, pair);
