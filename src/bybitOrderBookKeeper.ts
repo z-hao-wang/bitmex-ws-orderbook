@@ -77,7 +77,7 @@ export class BybitOrderBookKeeper extends BaseKeeper {
       const pair = pairMatch && pairMatch[1];
       if (pair) {
         this.lastObWsTime = new Date();
-        this.onReceiveObShared(res);
+        this.onReceiveOb(res);
       }
     } catch (e) {
       this.logger.error('onSocketMessage', e);

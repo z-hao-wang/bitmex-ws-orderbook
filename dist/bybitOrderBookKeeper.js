@@ -63,7 +63,7 @@ class BybitOrderBookKeeper extends baseKeeper_1.BaseKeeper {
             const pair = pairMatch && pairMatch[1];
             if (pair) {
                 this.lastObWsTime = new Date();
-                this.onReceiveObShared(res);
+                this.onReceiveOb(res);
             }
         }
         catch (e) {
