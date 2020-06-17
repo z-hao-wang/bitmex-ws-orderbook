@@ -1,6 +1,6 @@
 export * from './bitmexOrderBookKeeper';
 export { BitmexOb } from './types/bitmex.type';
-export * from './byBitOrderBookKeeper';
+export * from './bybitOrderBookKeeper';
 export * from './bitfinexObKeeper';
 export * from './gdaxObKeeper';
 export * from './genericObKeeper';

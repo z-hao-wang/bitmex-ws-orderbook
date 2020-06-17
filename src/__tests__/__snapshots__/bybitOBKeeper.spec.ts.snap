@@ -1,5 +1,35 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`bitmex ob keeper works with insert 1`] = `
+Object {
+  "asks": Array [
+    Object {
+      "a": 21,
+      "r": 7001,
+    },
+    Object {
+      "a": 3,
+      "r": 7002,
+    },
+    Object {
+      "a": 222,
+      "r": 7003,
+    },
+  ],
+  "bids": Array [
+    Object {
+      "a": 26,
+      "r": 7000.5,
+    },
+    Object {
+      "a": 5,
+      "r": 7000,
+    },
+  ],
+  "pair": "USD_BTC_perpetual_swap",
+}
+`;
+
 exports[`bitmex ob keeper works with snapshot 1`] = `
 Object {
   "asks": Array [
@@ -23,7 +53,6 @@ Object {
     },
   ],
   "pair": "USD_BTC_perpetual_swap",
-  "ts": undefined,
 }
 `;
 
@@ -46,6 +75,5 @@ Object {
     },
   ],
   "pair": "USD_BTC_perpetual_swap",
-  "ts": undefined,
 }
 `;

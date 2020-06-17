@@ -13,13 +13,13 @@ export class GenericObKeeperShared {
   onReceiveOb(params: { bids: OrderBookItem[]; asks: OrderBookItem[] }) {
     // deal with special cases, the bid cannot be greater than ask.
     if (params.asks.length > 0) {
-      while (this.bids.length > 0 && this.bids[0].r > params.asks[0].r) {
+      while (this.bids.length > 0 && this.bids[0].r >= params.asks[0].r) {
         this.bids.splice(0, 1);
       }
     }
 
     if (params.bids.length > 0) {
-      while (this.asks.length > 0 && this.asks[0].r < params.bids[0].r) {
+      while (this.asks.length > 0 && this.asks[0].r <= params.bids[0].r) {
         this.asks.splice(0, 1);
       }
     }

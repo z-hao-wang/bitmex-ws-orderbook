@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const byBitOrderBookKeeper_1 = require("../byBitOrderBookKeeper");
+const bybitOrderBookKeeper_1 = require("../bybitOrderBookKeeper");
+const bybitOrderBookKeeperOld_1 = require("../bybitOrderBookKeeperOld");
 const bybitObRaw = require('./bybitObRaw.json');
 const _ = require("lodash");
 describe('bitmex ob keeper', () => {
@@ -19,27 +20,46 @@ describe('bitmex ob keeper', () => {
         {
             type: 'delta',
             data: {
-                update: [{ id: 8716991250, side: 'Sell', size: 23063 }],
-                delete: [{ id: 8700000201 }],
+                update: [{ id: 8716991250, side: 'Sell', size: 23063, price: 7000.5 }],
+                delete: [{ id: 8700000201, price: 7002 }],
+            },
+        },
+        {
+            type: 'delta',
+            data: {
+                insert: [{ id: 8716991202, side: 'Sell', size: 222, price: 7003 }],
             },
         },
     ];
     beforeEach(() => {
-        keeper = new byBitOrderBookKeeper_1.BybitOrderBookKeeper({});
+        keeper = new bybitOrderBookKeeper_1.BybitOrderBookKeeper({});
     });
     it(`works with snapshot`, () => {
         keeper.onReceiveOb(obs[0], pair);
-        expect(keeper.getOrderBookWs(pair)).toMatchSnapshot();
+        const ob = keeper.getOrderBookWs(pair);
+        delete ob.ts;
+        expect(ob).toMatchSnapshot();
     });
     it(`works with update and delete`, () => {
         keeper.onReceiveOb(obs[0], pair);
         keeper.onReceiveOb(obs[1], pair);
-        expect(keeper.getOrderBookWs(pair)).toMatchSnapshot();
+        const ob = keeper.getOrderBookWs(pair);
+        delete ob.ts;
+        expect(ob).toMatchSnapshot();
     });
-    it('raw ob works', () => {
+    it(`works with insert`, () => {
+        keeper.onReceiveOb(obs[0], pair);
+        keeper.onReceiveOb(obs[2], pair);
+        const ob = keeper.getOrderBookWs(pair);
+        delete ob.ts;
+        expect(ob).toMatchSnapshot();
+    });
+    it.only('raw ob works', () => {
+        const keeperOld = new bybitOrderBookKeeperOld_1.BybitOrderBookKeeper({});
         _.each(bybitObRaw, ob => {
-            keeper.onReceiveOb(ob.data, pair);
+            keeper.onReceiveOb(ob, pair);
+            keeperOld.onReceiveOb(ob, pair);
         });
-        expect(keeper.getOrderBookWs(pair)).toEqual(keeper.getOrderBookWsOld(pair));
+        expect(_.omit(keeper.getOrderBookWs(pair), 'ts')).toEqual(_.omit(keeperOld.getOrderBookWs(pair), 'ts'));
     });
 });

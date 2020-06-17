@@ -1,4 +1,4 @@
-import { BybitOrderBookKeeper } from '../index';
+import { BybitOrderBookKeeper } from '../BybitOrderBookKeeper';
 import { WsReconnect } from 'websocket-reconnect';
 import { OrderBookSchema } from 'bitmex-request';
 (() => {

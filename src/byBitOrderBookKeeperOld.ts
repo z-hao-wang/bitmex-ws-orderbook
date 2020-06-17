@@ -133,6 +133,11 @@ export class BybitOrderBookKeeper extends BaseKeeper {
             this.storedObs[pair][String(row.id)].s = newRowRef.s;
             this.currentSplitIndex[pair] = this.storedObs[pair][String(row.id)].idx!;
           }
+        } else {
+          // sometimes we cannot find the id, so we gotta to insert new
+          const newRowRef = this.toInternalOb(row);
+          this.storedObs[pair][String(row.id)] = newRowRef;
+          this.searchAndInsertObRow(newRowRef, pair);
         }
       });
 
@@ -153,7 +158,6 @@ export class BybitOrderBookKeeper extends BaseKeeper {
         }
       });
     }
-
     if (this.enableEvent) {
       this.emit(`orderbook`, this.getOrderBookWs(obs.topic.match(/orderBookL2_25\.(.*)/)![1]));
     }
