@@ -59,8 +59,18 @@ class BybitOrderBookKeeper extends baseKeeper_1.BaseKeeper {
     onSocketMessage(msg) {
         try {
             const res = _.isString(msg) ? JSON.parse(msg) : msg;
-            const pairMatch = res && res.topic.match(/^orderBookL2_25\.(.*)/);
-            const pair = pairMatch && pairMatch[1];
+            if (!res.topic.match(/^orderBook/))
+                return;
+            const pair = (() => {
+                let pairMatch = res && res.topic.match(/^orderBookL2_25\.(.*)/);
+                if (pairMatch && pairMatch[1]) {
+                    return pairMatch[1];
+                }
+                pairMatch = res && res.topic.match(/^orderBook_200\.100ms\.(.*)/);
+                if (pairMatch && pairMatch[1]) {
+                    return pairMatch[1];
+                }
+            })();
             if (pair) {
                 this.lastObWsTime = new Date();
                 this.onReceiveOb(res);
