@@ -4,7 +4,7 @@ const _ = require("lodash");
 function findBestBid(splitIndex, storedObsOrdered) {
     let i = splitIndex;
     if (!storedObsOrdered[i]) {
-        throw new Error(`findBestBid invalid splitIndex=${i}`);
+        throw new Error(`findBestBid invalid splitIndex=${i} storedObsOrdered.length=${storedObsOrdered.length}`);
     }
     if (storedObsOrdered[i].a === 0) {
         // is this deleted item, start from top

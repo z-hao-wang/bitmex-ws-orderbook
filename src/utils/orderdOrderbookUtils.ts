@@ -5,7 +5,7 @@ import * as _ from 'lodash';
 export function findBestBid(splitIndex: number, storedObsOrdered: InternalOb[]) {
   let i = splitIndex;
   if (!storedObsOrdered[i]) {
-    throw new Error(`findBestBid invalid splitIndex=${i}`);
+    throw new Error(`findBestBid invalid splitIndex=${i} storedObsOrdered.length=${storedObsOrdered.length}`);
   }
   if (storedObsOrdered[i].a === 0) {
     // is this deleted item, start from top
