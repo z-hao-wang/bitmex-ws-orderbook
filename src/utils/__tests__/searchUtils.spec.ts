@@ -58,6 +58,18 @@ describe('searchUtils', () => {
     expect(searchUtils.sortedFindFirstSmallerEqual(ob.bids, 7001, ob => ob.r)).toBe(1);
   });
 
+  it(`sortedFindFirstSmallerEqual found one match equal`, () => {
+    expect(searchUtils.sortedFindFirstSmallerEqual([{ r: 7001, a: 1 }], 7001, ob => ob.r)).toBe(0);
+  });
+
+  it(`sortedFindFirstSmallerEqual found one match smaller`, () => {
+    expect(searchUtils.sortedFindFirstSmallerEqual([{ r: 7001, a: 1 }], 7002, ob => ob.r)).toBe(0);
+  });
+
+  it(`sortedFindFirstSmallerEqual found one no match`, () => {
+    expect(searchUtils.sortedFindFirstSmallerEqual([{ r: 7001, a: 1 }], 7000, ob => ob.r)).toBe(-1);
+  });
+
   it(`sortedFindFirstSmallerEqual last index`, () => {
     expect(
       searchUtils.sortedFindFirstSmallerEqual(

@@ -19,6 +19,9 @@ function sortedFindFirstGreater(arr, val, getter, allowEqual) {
         return -1;
     }
     if (arr.length === 1) {
+        if (allowEqual) {
+            return getter(arr[0]) >= val ? 0 : -1;
+        }
         return getter(arr[0]) > val ? 0 : -1;
     }
     // the array must be sorted ascending.
@@ -54,6 +57,9 @@ function sortedFindFirstSmaller(arr, val, getter, allowEqual) {
         return -1;
     }
     if (arr.length === 1) {
+        if (allowEqual) {
+            return getter(arr[0]) <= val ? 0 : -1;
+        }
         return getter(arr[0]) < val ? 0 : -1;
     }
     // the array must be sorted descending.
