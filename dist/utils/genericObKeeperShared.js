@@ -44,7 +44,7 @@ class GenericObKeeperShared {
                 else {
                     const foundIndex = searchUtils_1.sortedFindFirstSmallerEqual(this.bids, bid.r, b => b.r);
                     if (foundIndex === -1) {
-                        console.error(`invalid condition, did not found index bid`, bid, this.bids.length);
+                        console.error(`invalid condition, did not found index bid`, bid, this.bids);
                     }
                     else {
                         if (this.bids[foundIndex].r === bid.r) {
