@@ -27,7 +27,7 @@
   "dependencies": {
     "bitmex-request": "0.0.32",
     "el-logger": "1.0.4",
-    "lodash": "4.17.15"
+    "lodash": "4.17.19"
   },
   "devDependencies": {
     "@types/jest": "^24.0.23",
