@@ -24,8 +24,10 @@
     "type": "git",
     "url": "https://github.com/z-hao-wang/bitmex-ws-orderbook.git"
   },
+  "peerDependencies": {
+    bitmex-request": "*",
+  },
   "dependencies": {
-    "bitmex-request": "0.0.32",
     "el-logger": "1.0.4",
     "lodash": "4.17.15"
   },
@@ -34,6 +36,7 @@
     "@types/lodash": "^4.14.129",
     "@types/request": "^2.48.1",
     "@types/ws": "^6.0.1",
+    "bitmex-request": "0.0.32",
     "jest": "^24.9.0",
     "prettier": "^1.16.4",
     "rimraf": "^3.0.0",
