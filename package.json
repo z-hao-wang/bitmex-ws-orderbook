@@ -25,7 +25,7 @@
     "url": "https://github.com/z-hao-wang/bitmex-ws-orderbook.git"
   },
   "peerDependencies": {
-    bitmex-request": "*",
+    "bitmex-request": "*"
   },
   "dependencies": {
     "el-logger": "1.0.4",
