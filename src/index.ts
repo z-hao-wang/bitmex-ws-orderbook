@@ -6,4 +6,5 @@ export * from './gdaxObKeeper';
 export * from './genericObKeeper';
 export * from './binanceFxObKeeper';
 export * from './phemexObKeeper';
+export * from './normalizedObKeeper';
 export { BybitOb } from './types/bybit.type';

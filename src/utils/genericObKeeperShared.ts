@@ -9,6 +9,7 @@ export class GenericObKeeperShared {
     this.bids = [];
     this.asks = [];
   }
+
   // if initial, return true
   onReceiveOb(params: { bids: OrderBookItem[]; asks: OrderBookItem[] }) {
     // deal with special cases, the bid cannot be greater than ask.
