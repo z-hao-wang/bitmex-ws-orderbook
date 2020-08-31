@@ -10,5 +10,5 @@ export interface ObStreamShared {
 }
 export declare function normalizedObToStandardOb(v: number[]): OrderBookItem;
 export declare class NormalizedObKeeper extends GenericObKeeper {
-    onSocketMessage(msg: any): void;
+    onData(data: ObStreamShared): void;
 }

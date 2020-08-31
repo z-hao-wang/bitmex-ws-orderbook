@@ -40,10 +40,8 @@ export function normalizedObToStandardOb(v: number[]): OrderBookItem {
 }
 
 export class NormalizedObKeeper extends GenericObKeeper {
-  onSocketMessage(msg: any) {
+  onData(data: ObStreamShared) {
     try {
-      const res: { stream: string; data: ObStreamShared } = _.isString(msg) ? JSON.parse(msg) : msg;
-      const { data } = res;
       this.onReceiveOb({
         isNewSnapshot: data.e === 's',
         pair: data.pair || data.c.toString(),

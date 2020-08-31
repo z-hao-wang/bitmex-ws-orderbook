@@ -7,10 +7,8 @@ function normalizedObToStandardOb(v) {
 }
 exports.normalizedObToStandardOb = normalizedObToStandardOb;
 class NormalizedObKeeper extends genericObKeeper_1.GenericObKeeper {
-    onSocketMessage(msg) {
+    onData(data) {
         try {
-            const res = _.isString(msg) ? JSON.parse(msg) : msg;
-            const { data } = res;
             this.onReceiveOb({
                 isNewSnapshot: data.e === 's',
                 pair: data.pair || data.c.toString(),
