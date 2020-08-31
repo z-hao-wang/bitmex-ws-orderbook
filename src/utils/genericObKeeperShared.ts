@@ -14,13 +14,15 @@ export class GenericObKeeperShared {
   onReceiveOb(params: { bids: OrderBookItem[]; asks: OrderBookItem[] }) {
     // deal with special cases, the bid cannot be greater than ask.
     if (params.asks.length > 0) {
-      while (this.bids.length > 0 && this.bids[0].r >= params.asks[0].r && params.asks[0].a > 0) {
+      const firstNonZeroAsk = _.find(params.asks, bid => bid.a > 0);
+      while (firstNonZeroAsk && this.bids.length > 0 && this.bids[0].r >= firstNonZeroAsk.r) {
         this.bids.splice(0, 1);
       }
     }
 
     if (params.bids.length > 0) {
-      while (this.asks.length > 0 && this.asks[0].r <= params.bids[0].r && params.bids[0].a > 0) {
+      const firstNonZeroBid = _.find(params.bids, bid => bid.a > 0);
+      while (firstNonZeroBid && this.asks.length > 0 && this.asks[0].r <= firstNonZeroBid.r) {
         this.asks.splice(0, 1);
       }
     }
@@ -33,7 +35,9 @@ export class GenericObKeeperShared {
 
       if (this.bids.length === 0) {
         // insert if empty
-        this.bids.push(bid);
+        if (bid.a > 0) {
+          this.bids.push(bid);
+        }
       } else {
         // if bid is too low than whole book, push at bottom
         if (bid.r < _.last(this.bids)!.r) {
@@ -54,7 +58,7 @@ export class GenericObKeeperShared {
                 this.bids[foundIndex] = bid;
               }
             } else {
-              // insert
+              // insert if the price is not equal, and amount > 0
               if (bid.a > 0) {
                 this.bids.splice(foundIndex, 0, bid);
               }

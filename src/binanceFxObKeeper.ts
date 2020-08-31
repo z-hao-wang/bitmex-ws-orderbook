@@ -55,14 +55,14 @@ export class BinanceFxObKeeper extends GenericObKeeper {
         for (let bid of bids) {
           if (currentOb.asks[0] && bid.a === 0 && bid.r >= currentOb.asks[0].r) {
             asks.push(bid);
-            console.log(`moving bid ${JSON.stringify(bid)} to ask obAsk=${currentOb.asks[0].r}`);
+            console.log(`BinanceFxObKeeper moving bid ${JSON.stringify(bid)} to ask topAsk=${currentOb.asks[0].r}`);
           }
         }
 
         for (let ask of asks) {
           if (currentOb.bids[0] && ask.a === 0 && ask.r <= currentOb.bids[0].r) {
             bids.push(ask);
-            console.log(`moving ask ${JSON.stringify(ask)} to bid obBid=${currentOb.bids[0].r}`);
+            console.log(`BinanceFxObKeeper moving ask ${JSON.stringify(ask)} to bid topBid=${currentOb.bids[0].r}`);
           }
         }
         this.onReceiveOb({
