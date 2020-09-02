@@ -7,6 +7,6 @@ const BITMEX_ID_TO_PRICE_CONVERSION = {
 function idToPrice(symbol, id) {
     const [ID_ZERO, ID_DELTA] = BITMEX_ID_TO_PRICE_CONVERSION[symbol];
     const price = (ID_ZERO - id) / ID_DELTA;
-    return price;
+    return +price.toFixed(2);
 }
 exports.idToPrice = idToPrice;

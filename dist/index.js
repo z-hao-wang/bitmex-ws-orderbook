@@ -11,3 +11,5 @@ __export(require("./genericObKeeper"));
 __export(require("./binanceFxObKeeper"));
 __export(require("./phemexObKeeper"));
 __export(require("./normalizedObKeeper"));
+const _bitmexUtils = require("./utils/bitmexUtils");
+exports.bitmexUtils = _bitmexUtils;

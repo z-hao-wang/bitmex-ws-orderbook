@@ -7,4 +7,6 @@ export * from './genericObKeeper';
 export * from './binanceFxObKeeper';
 export * from './phemexObKeeper';
 export * from './normalizedObKeeper';
+import * as _bitmexUtils from './utils/bitmexUtils';
 export { BybitOb } from './types/bybit.type';
+export declare const bitmexUtils: typeof _bitmexUtils;
