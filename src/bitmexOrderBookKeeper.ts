@@ -2,6 +2,7 @@ import * as _ from 'lodash';
 import { BitmexRequest } from 'bitmex-request';
 import * as traderUtils from './utils/traderUtils';
 import { sortByAsc, sortByDesc, verifyObPollVsObWs } from './utils/parsingUtils';
+import { idToPrice } from './utils/bitmexUtils';
 import { BitmexOb } from './types/bitmex.type';
 import { OrderBookItem, OrderBookSchema } from 'bitmex-request';
 import { BaseKeeper } from './baseKeeper';
@@ -128,12 +129,27 @@ export class BitmexOrderBookKeeper extends BaseKeeper {
             this.currentSplitIndex[pair] = this.storedObs[pair][String(row.id)].idx!;
           }
         } else {
-          const errMsg = `${this.name} update ${row.id} does not exist in currentObMap`;
+          // get price from id and insert this price
+          const isEth = !!pair.match(/ETH/);
+          const price = idToPrice(isEth ? 'ETH' : 'BTC', row.id);
+          const foundIndex = sortedFindIndex(this.storedObsOrdered[pair], price, x => x.r);
+          this.storedObs[pair][String(row.id)] = this.bitmexObToInternalOb({ ...row, price });
+          const newRowRef = this.storedObs[pair][String(row.id)];
+          if (foundIndex !== -1) {
+            this.storedObsOrdered[pair][foundIndex] = newRowRef;
+          } else {
+            // if not found, insert with new price.
+            for (let i = 0; i < this.storedObsOrdered[pair].length; i++) {
+              if (row.price < this.storedObsOrdered[pair][i].r) {
+                this.storedObsOrdered[pair].splice(i, 0, newRowRef);
+                break;
+              }
+            }
+          }
+
+          const errMsg = `${this.name} update ${row.id} does not exist in currentObMap ${JSON.stringify(newRowRef)}`;
           if (!this.silentMode) {
             this.logger.error(errMsg);
-          }
-          if (this.enableEvent) {
-            this.emit(`error`, errMsg);
           }
         }
       });
