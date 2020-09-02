@@ -13,6 +13,7 @@ const _ = require("lodash");
 const bitmex_request_1 = require("bitmex-request");
 const traderUtils = require("./utils/traderUtils");
 const parsingUtils_1 = require("./utils/parsingUtils");
+const bitmexUtils_1 = require("./utils/bitmexUtils");
 const baseKeeper_1 = require("./baseKeeper");
 const searchUtils_1 = require("./utils/searchUtils");
 const orderdOrderbookUtils_1 = require("./utils/orderdOrderbookUtils");
@@ -126,12 +127,27 @@ class BitmexOrderBookKeeper extends baseKeeper_1.BaseKeeper {
                     }
                 }
                 else {
-                    const errMsg = `${this.name} update ${row.id} does not exist in currentObMap`;
+                    // get price from id and insert this price
+                    const isEth = !!pair.match(/ETH/);
+                    const price = bitmexUtils_1.idToPrice(isEth ? 'ETH' : 'BTC', row.id);
+                    const foundIndex = searchUtils_1.sortedFindIndex(this.storedObsOrdered[pair], price, x => x.r);
+                    this.storedObs[pair][String(row.id)] = this.bitmexObToInternalOb(Object.assign(Object.assign({}, row), { price }));
+                    const newRowRef = this.storedObs[pair][String(row.id)];
+                    if (foundIndex !== -1) {
+                        this.storedObsOrdered[pair][foundIndex] = newRowRef;
+                    }
+                    else {
+                        // if not found, insert with new price.
+                        for (let i = 0; i < this.storedObsOrdered[pair].length; i++) {
+                            if (row.price < this.storedObsOrdered[pair][i].r) {
+                                this.storedObsOrdered[pair].splice(i, 0, newRowRef);
+                                break;
+                            }
+                        }
+                    }
+                    const errMsg = `${this.name} update ${row.id} does not exist in currentObMap ${JSON.stringify(newRowRef)}`;
                     if (!this.silentMode) {
                         this.logger.error(errMsg);
-                    }
-                    if (this.enableEvent) {
-                        this.emit(`error`, errMsg);
                     }
                 }
             });
