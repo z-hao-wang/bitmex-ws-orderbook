@@ -110,7 +110,7 @@ export class BybitOrderBookKeeper extends BaseKeeper {
         }
       });
       this.onReceiveObShared({ pair, bids, asks, isNewSnapshot: true });
-    } else if (obs.type === 'delta') {
+    } else {
       const { insert, update, delete: deleted } = (obs as BybitOb.OrderBooksDelta).data;
       if (insert && insert.length > 0) {
         const pair = _pair || insert[0].symbol;

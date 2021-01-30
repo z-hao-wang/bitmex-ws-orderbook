@@ -98,7 +98,7 @@ class BybitOrderBookKeeper extends baseKeeper_1.BaseKeeper {
             });
             this.onReceiveObShared({ pair, bids, asks, isNewSnapshot: true });
         }
-        else if (obs.type === 'delta') {
+        else {
             const { insert, update, delete: deleted } = obs.data;
             if (insert && insert.length > 0) {
                 const pair = _pair || insert[0].symbol;
