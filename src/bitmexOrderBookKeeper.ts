@@ -1,10 +1,10 @@
 import * as _ from 'lodash';
-import { BitmexRequest } from 'bitmex-request';
+import { BitmexRequest } from 'bitmex-request/dist/sharedTypes';
 import * as traderUtils from './utils/traderUtils';
 import { sortByAsc, sortByDesc, verifyObPollVsObWs } from './utils/parsingUtils';
 import { idToPrice } from './utils/bitmexUtils';
 import { BitmexOb } from './types/bitmex.type';
-import { OrderBookItem, OrderBookSchema } from 'bitmex-request';
+import { OrderBookItem, OrderBookSchema } from 'bitmex-request/dist/sharedTypes';
 import { BaseKeeper } from './baseKeeper';
 import { sortedFindIndex } from './utils/searchUtils';
 import { InternalOb } from './types/shared.type';

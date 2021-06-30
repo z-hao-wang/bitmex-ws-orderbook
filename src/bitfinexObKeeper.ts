@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { OrderBookSchema, OrderBookItem } from 'bitmex-request';
+import { OrderBookSchema, OrderBookItem } from 'bitmex-request/dist/sharedTypes';
 import { BaseKeeper } from './baseKeeper';
 /**
  * [ 11153,

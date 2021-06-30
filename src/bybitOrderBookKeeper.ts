@@ -3,7 +3,7 @@ import { BybitRequest } from 'bitmex-request';
 import * as traderUtils from './utils/traderUtils';
 import { verifyObPollVsObWs } from './utils/parsingUtils';
 import { BybitOb } from './types/bybit.type';
-import { OrderBookItem, OrderBookSchema } from 'bitmex-request';
+import { OrderBookItem, OrderBookSchema } from 'bitmex-request/dist/sharedTypes';
 import { BaseKeeper } from './baseKeeper';
 import { GenericObKeeperShared } from './utils/genericObKeeperShared';
 

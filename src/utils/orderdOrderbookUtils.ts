@@ -1,5 +1,5 @@
 import { InternalOb } from '../types/shared.type';
-import { OrderBookItem } from 'bitmex-request';
+import { OrderBookItem } from 'bitmex-request/dist/sharedTypes';
 import * as _ from 'lodash';
 
 export function findBestBid(splitIndex: number, storedObsOrdered: InternalOb[]) {
